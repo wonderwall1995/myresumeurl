@@ -1,0 +1,383 @@
+/* 개발 전용 편집 모드 스타일. 개발 서버가 HTML에 넣어 준다.
+   이 파일은 public 폴더 밖에 있다. 배포물에는 포함되지 않는다.
+   사이트의 디자인 규칙(색 없음)은 적용하지 않는다. 개발 도구가 사이트와 구별되어야 하기 때문이다. */
+
+/* 토글 버튼. 왼쪽 아래, Inspector 버튼 오른쪽에 놓인다. */
+.dev-edit-toggle {
+  position: fixed;
+  left: 150px;
+  bottom: 16px;
+  z-index: 2147483000;
+  padding: 8px 14px;
+  border: 1px solid #1d4ed8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font: 12px/1.2 ui-monospace, Consolas, monospace;
+  cursor: pointer;
+}
+
+.dev-edit-toggle[aria-pressed="true"] {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.dev-edit-toggle:disabled {
+  border-color: #9ca3af;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 편집 중인 글자. 점선 윤곽선은 배치와 크기를 바꾸지 않는다. */
+.dev-edit-on [data-edit] {
+  outline: 1px dashed rgb(29 78 216 / 0.55);
+  outline-offset: 2px;
+  cursor: text;
+}
+
+.dev-edit-on [data-edit]:hover {
+  outline: 1px solid rgb(29 78 216 / 0.9);
+}
+
+.dev-edit-on [data-edit]:focus {
+  outline: 2px solid #1d4ed8;
+  background: rgb(29 78 216 / 0.06);
+}
+
+.dev-edit-on .dev-edit-dirty {
+  outline: 2px solid #ea580c;
+  background: rgb(234 88 12 / 0.1);
+}
+
+/* 선택된 항목. 도구 막대가 이 항목에 붙어 있다. */
+.dev-edit-on .dev-edit-item-hit {
+  box-shadow: inset 0 0 0 2px rgb(29 78 216 / 0.45);
+}
+
+/* 편집 중 굵게와 제목 표시 (lib/markdown.js의 highlightMarkdown)
+   기호(**, ##)는 흐리게, 안쪽 글자는 굵게, 제목 줄은 크게 보인다. 제목은 줄바꿈 없이 이어지는 글자 모양이다. */
+.dev-edit-on .md-edit-b {
+  font-weight: 700;
+}
+
+.dev-edit-on .md-mark {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.dev-edit-on .md-edit-h {
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.dev-edit-on .md-edit-h1 {
+  font-size: var(--md-h1-size);
+}
+
+.dev-edit-on .md-edit-h2 {
+  font-size: var(--md-h2-size);
+}
+
+.dev-edit-on .md-edit-h3 {
+  font-size: var(--md-h3-size);
+}
+
+/* 구분선 항목: 화면에서는 글자("---")가 보이지 않는다. 편집 중에는 누르고 고칠 수 있게 글자를 흐리게 보여 준다. */
+.dev-edit-on .item-divider {
+  height: auto;
+  overflow: visible;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* 프로젝트 타일: 열기 버튼의 넓은 눌림 영역을 끄고, 타일 안의 글자를 직접 누를 수 있게 한다. */
+.dev-edit-on .gallery-open {
+  pointer-events: none;
+}
+
+.dev-edit-on .gallery-open::after {
+  display: none;
+}
+
+.dev-edit-open {
+  margin-block-start: 8px;
+  padding: 4px 10px;
+  border: 1px solid #1d4ed8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font: 12px/1.2 ui-monospace, Consolas, monospace;
+  cursor: pointer;
+}
+
+/* 저장 막대, 도구 막대, 알림. popover라서 모달 창 위에도 뜬다. 기본 popover 모양은 지운다.
+   아래에서 display를 지정하면 브라우저의 "닫힌 popover는 숨김" 규칙이 덮여서 닫혀 있어도 보인다.
+   그래서 열려 있지 않을 때는 따로 숨긴다. */
+.dev-edit-bar:not(:popover-open),
+.dev-edit-tools:not(:popover-open),
+.dev-edit-symbols:not(:popover-open),
+.dev-edit-toast:not(:popover-open) {
+  display: none;
+}
+
+.dev-edit-bar,
+.dev-edit-tools,
+.dev-edit-symbols,
+.dev-edit-toast {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #1d4ed8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111827;
+  font: 12px/1.2 ui-monospace, Consolas, monospace;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+}
+
+.dev-edit-bar {
+  left: 50%;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.dev-edit-bar-dirty {
+  border-color: #ea580c;
+}
+
+.dev-edit-bar button,
+.dev-edit-tools button,
+.dev-edit-symbols button,
+.dev-edit-dialog button {
+  padding: 4px 10px;
+  border: 1px solid #1d4ed8;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dev-edit-bar button:hover,
+.dev-edit-tools button:hover,
+.dev-edit-symbols button:hover,
+.dev-edit-dialog button:hover {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+/* 기호 선택 창: 기호 버튼이 한 줄에 7개씩 놓인다. "기호 지움" 버튼은 맨 아래 한 줄을 다 쓴다.
+   기호는 본문과 같은 글꼴로 보여서 화면과 인쇄에 나올 모양을 미리 확인할 수 있다. */
+.dev-edit-symbols {
+  display: grid;
+  grid-template-columns: repeat(7, 34px);
+  gap: 4px;
+  padding: 6px;
+}
+
+.dev-edit-symbols button {
+  padding: 5px 0;
+  font-size: 17px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.dev-edit-symbols .dev-edit-symbols-clear {
+  grid-column: 1 / -1;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.dev-edit-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+}
+
+.dev-edit-tools button[hidden] {
+  display: none;
+}
+
+.dev-edit-tools button:disabled,
+.dev-edit-bar button:disabled {
+  border-color: #9ca3af;
+  background: #ffffff;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.dev-edit-tools-label {
+  margin-inline-end: 4px;
+  color: #1d4ed8;
+  font-weight: bold;
+}
+
+.dev-edit-toast {
+  left: 50%;
+  top: 16px;
+  display: grid;
+  gap: 2px;
+  min-width: min(90vw, 280px);
+  max-width: min(90vw, 560px);
+  padding: 10px 16px;
+  border-width: 1px 1px 1px 5px;
+  transform: translateX(-50%);
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+/* 나타날 때 위에서 내려오며 선명해지고, 머무른 뒤 끝에서 서서히 사라진다. (팝오버가 열릴 때마다 처음부터 다시 재생된다.)
+   성공은 3초, 실패는 10초이다. dev-edit.js의 닫는 시간과 같아야 한다. 진행 중은 사라지지 않는다. */
+.dev-edit-toast[data-kind="info"] {
+  animation: dev-edit-toast-in 0.2s ease-out;
+}
+
+.dev-edit-toast[data-kind="success"] {
+  animation: dev-edit-toast-life 3s ease-out forwards;
+}
+
+.dev-edit-toast[data-kind="error"] {
+  animation: dev-edit-toast-life 10s ease-out forwards;
+}
+
+@keyframes dev-edit-toast-in {
+  from {
+    opacity: 0;
+    translate: 0 -12px;
+  }
+}
+
+@keyframes dev-edit-toast-life {
+  0% {
+    opacity: 0;
+    translate: 0 -12px;
+  }
+  4%,
+  88% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+
+/* 움직임 줄이기 설정이면 이동 없이 나타나고 사라진다. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes dev-edit-toast-life {
+    0% {
+      opacity: 0;
+    }
+    4%,
+    88% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
+.dev-edit-toast strong {
+  font-size: 14px;
+}
+
+.dev-edit-toast span {
+  color: #4b5563;
+}
+
+/* 진행 중은 파랑, 성공은 초록, 실패는 빨강이다. 글자도 함께 달라서 색만으로 구분하지 않는다. */
+.dev-edit-toast[data-kind="info"] {
+  border-color: #1d4ed8;
+}
+
+.dev-edit-toast[data-kind="success"] {
+  border-color: #15803d;
+  background: #f0fdf4;
+}
+
+.dev-edit-toast[data-kind="success"] strong {
+  color: #166534;
+}
+
+.dev-edit-toast[data-kind="error"] {
+  border-color: #b91c1c;
+  background: #fef2f2;
+}
+
+.dev-edit-toast[data-kind="error"] strong {
+  color: #991b1b;
+}
+
+/* 삭제 확인 대화 상자 */
+.dev-edit-dialog {
+  min-width: min(90vw, 360px);
+  padding: 16px;
+  border: 1px solid #1d4ed8;
+  border-radius: 10px;
+  color: #111827;
+  font: 13px/1.4 ui-monospace, Consolas, monospace;
+}
+
+.dev-edit-dialog h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.dev-edit-quote {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-left: 3px solid #b91c1c;
+  background: #f3f4f6;
+  word-break: break-word;
+}
+
+.dev-edit-note {
+  margin: 0 0 12px;
+  color: #4b5563;
+}
+
+.dev-edit-dialog .dev-edit-danger {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+.dev-edit-dialog .dev-edit-danger:hover {
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+.dev-edit-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 인쇄할 때는 편집 표시가 모두 나타나지 않는다. */
+@media print {
+  .dev-edit-toggle,
+  .dev-edit-bar,
+  .dev-edit-tools,
+  .dev-edit-symbols,
+  .dev-edit-toast,
+  .dev-edit-dialog,
+  .dev-edit-open {
+    display: none !important;
+  }
+
+  .dev-edit-on [data-edit],
+  .dev-edit-on .dev-edit-dirty,
+  .dev-edit-on .dev-edit-item-hit {
+    outline: none !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+}

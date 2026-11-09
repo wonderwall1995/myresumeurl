@@ -1,0 +1,74 @@
+/* 인쇄 스타일. 모든 페이지가 공유한다. A4 세로 기준. */
+
+/* 용지는 A4 세로이다. 쪽 여백(15mm)은 여기서만 정한다. */
+@page {
+  size: A4 portrait;
+  margin: 15mm;
+}
+
+/* 본문 글자 크기는 11pt이다.
+   rem으로 정한 모든 크기(제목, 간격, 목록 들여쓰기)가 같은 비율로 바뀐다. */
+html {
+  font-size: 11pt;
+}
+
+/* 쪽 여백이 이미 있으므로 화면용 좌우 여백, 위아래 여백, 최대 폭을 없앤다. */
+.site-header,
+.site-main,
+.site-footer {
+  max-width: none;
+  padding-inline: 0;
+}
+
+#app {
+  padding-block: 0;
+}
+
+/* 목차 구간별 쪽 나누기
+   목차 항목의 대상 요소(js/common/render-page.js가 print-page-start 클래스를 붙인다)는 새 쪽에서 시작한다.
+   목차의 구간 하나가 종이에서 따로 인쇄된다. 구간 안의 다른 섹션(예: 자기소개 구간의 학력, 기타)은 같은 쪽에 이어진다.
+   맨 위의 첫 대상(인적사항)은 이미 쪽의 시작이므로 빈 쪽이 생기지 않는다. */
+.print-page-start {
+  break-before: page;
+}
+
+/* 직책 사이 간격 (구분선 없음)
+   앞 행과의 간격은 위 여백 32pt와 안쪽 여백 32pt이다. (사용자 요청. 화면 값은 components.css에 있다.) */
+.card .card-role-row + .card-role-row {
+  margin-block-start: 32pt;
+  padding-block-start: 32pt;
+}
+
+/* 프로젝트 갤러리
+   격자를 풀고 모든 프로젝트의 상세를 펼치는 규칙은 gallery-expanded.css에 있다. (인쇄와 JavaScript 없는 화면이 함께 쓴다.)
+   여기에는 인쇄에서만 쓰는 규칙을 둔다.
+   프로젝트 하나는 쪽 하나에서 시작한다. 첫 프로젝트는 "프로젝트" 제목과 같은 쪽에 놓인다.
+   내용이 한 쪽보다 길면 쪽이 이어지고, 짧아도 다음 프로젝트는 새 쪽에서 시작한다. */
+.gallery-item {
+  break-inside: avoid;
+}
+
+.gallery-item + .gallery-item {
+  break-before: page;
+}
+
+/* 링크는 글자 뒤에 주소를 덧붙여 출력한다. 종이에서는 누를 수 없기 때문이다. */
+.gallery-link::after {
+  content: " (" attr(href) ")";
+}
+
+/* 이미지가 종이를 너무 차지하지 않게 높이를 제한한다. 쪽 중간에서 잘리지도 않게 한다. */
+.modal-image {
+  max-height: 70mm;
+  break-inside: avoid;
+}
+
+/* 인쇄 위젯은 종이에 나오지 않는다. */
+.print-widget {
+  display: none;
+}
+
+/* 목차는 종이에 나오지 않는다. */
+.toc {
+  display: none;
+}

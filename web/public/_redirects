@@ -1,0 +1,6 @@
+# 이동 규칙. 로컬 서버 규칙(저장소 루트의 serve.json)과 같은 내용을 유지한다.
+# pnpm check가 두 파일의 일치를 검사한다.
+# index.html을 허브로 바꿀 때: 아래 /index 줄을 삭제하고, serve.json의 같은 규칙을 삭제하고,
+# public/index.html의 meta refresh를 삭제한다. 세 곳을 함께 바꾼다.
+/       /main  302
+/index  /main  302

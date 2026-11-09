@@ -1,0 +1,113 @@
+/* 기본 스타일. 이 단계에서는 초기화, 색, 글꼴만 적용한다.
+   배치와 크기는 이후 단계에서 추가한다. */
+
+/* 초기화 */
+*,
+*::before,
+*::after {
+  /* 폭 계산에 padding과 border를 포함한다. */
+  box-sizing: border-box;
+}
+
+body {
+  /* 브라우저 기본 여백(8px)을 없앤다. 여백은 컨테이너가 정한다. */
+  margin: 0;
+}
+
+img {
+  /* 이미지가 부모 폭을 넘지 않게 한다. */
+  max-width: 100%;
+  height: auto;
+}
+
+:root {
+  /* 브라우저와 운영체제의 어두운 테마가 색을 바꾸지 못하게 한다. */
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  /* 한국어는 단어 중간에서 끊지 않고 띄어쓰기에서 줄을 바꾼다. */
+  word-break: keep-all;
+  /* 긴 영문이나 주소가 화면 밖으로 넘치지 않게 한다. */
+  overflow-wrap: break-word;
+}
+
+/* 본문 문단
+   한 줄의 길이를 제한해 읽기 쉽게 한다. 위쪽 여백은 0이다. 문단 사이는 아래 여백이 만든다. */
+p {
+  max-width: var(--text-max-width);
+  margin-block: 0 calc(var(--space-unit) * 2);
+}
+
+/* 목록
+   점 기호를 유지한다. 흑백 인쇄에서도 구분된다. 문단과 같은 줄 길이와 아래 여백을 쓴다. */
+ul,
+ol {
+  max-width: var(--text-max-width);
+  margin-block: 0 calc(var(--space-unit) * 2);
+  padding-inline-start: var(--list-indent);
+}
+
+ul {
+  list-style: disc;
+}
+
+/* 항목 사이 간격 */
+li + li {
+  margin-block-start: calc(var(--space-unit) / 2);
+}
+
+/* 제목 위계
+   색이 없으므로 크기와 굵기로 구분한다. 세 단계 모두 굵기는 같고 크기만 다르다.
+   위쪽 여백은 0이다. 섹션 사이의 간격은 섹션 간격 규칙이 정한다. */
+h1,
+h2,
+h3 {
+  margin-block-start: 0;
+  font-weight: var(--font-weight-bold);
+}
+
+h1 {
+  margin-block-end: var(--space-unit);
+  font-size: var(--font-size-h1);
+  line-height: var(--line-height-h1);
+}
+
+h2 {
+  margin-block-end: calc(var(--space-unit) * 2);
+  font-size: var(--font-size-h2);
+  line-height: var(--line-height-h2);
+}
+
+h3 {
+  margin-block-end: var(--space-unit);
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-h3);
+}
+
+/* 링크
+   색을 쓰지 않으므로 밑줄의 모양으로 링크임을 알린다.
+   방문한 링크도 모양이 같다. 전환 효과는 없다. */
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+/* 마우스를 올리면 밑줄이 굵어진다. 터치 기기에서는 적용하지 않는다. */
+@media (hover: hover) {
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}

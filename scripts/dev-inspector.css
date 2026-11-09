@@ -1,0 +1,72 @@
+/* 개발 전용 Inspector 스타일. 개발 서버가 HTML에 넣어 준다.
+   이 파일은 public 폴더 밖에 있다. 배포물에는 포함되지 않는다.
+   사이트의 디자인 규칙(색 없음)은 적용하지 않는다. 개발 도구가 사이트와 구별되어야 하기 때문이다. */
+
+/* 토글 버튼. 왼쪽 아래에 고정된다. 오른쪽 아래는 이후 인쇄 버튼 자리로 비워 둔다.
+   모달 창(<dialog>)은 맨 위 층에 뜨므로 모달이 열리면 이 버튼은 모달 뒤에 가려진다. */
+.dev-inspector-toggle {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  padding: 8px 14px;
+  border: 1px solid #111111;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #111111;
+  font: 12px/1.2 ui-monospace, Consolas, monospace;
+  cursor: pointer;
+}
+
+.dev-inspector-toggle[aria-pressed="true"] {
+  background: #111111;
+  color: #ffffff;
+}
+
+/* 툴팁. popover 요소라서 맨 위 층에 뜬다. 마우스 동작을 가로채지 않는다. */
+.dev-inspector-tip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 8px 10px;
+  max-width: 360px;
+  overflow: visible;
+  border: 1px solid #e03131;
+  border-radius: 6px;
+  background: #111111;
+  color: #ffffff;
+  font: 12px/1.45 ui-monospace, Consolas, monospace;
+  text-align: left;
+  pointer-events: none;
+  word-break: break-all;
+}
+
+.dev-inspector-id {
+  font-weight: 700;
+}
+
+.dev-inspector-notation {
+  color: #ffd43b;
+}
+
+.dev-inspector-dim {
+  color: #adb5bd;
+}
+
+/* 가리킨 요소의 윤곽선. 윤곽선은 배치와 크기를 바꾸지 않는다. 안쪽으로 그려서 가장자리가 잘리지 않게 한다. */
+.dev-inspector-hit {
+  outline: 2px dashed #e03131 !important;
+  outline-offset: -2px !important;
+}
+
+/* 인쇄할 때는 버튼, 툴팁, 윤곽선이 모두 나타나지 않는다. */
+@media print {
+  .dev-inspector-toggle,
+  .dev-inspector-tip {
+    display: none !important;
+  }
+
+  .dev-inspector-hit {
+    outline: none !important;
+  }
+}
