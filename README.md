@@ -47,8 +47,6 @@
 | `pnpm build` | `web/public`과 `web/preview`를 합쳐 `dist/`를 만들고 이력서 내용을 미리 그림 |
 | `pnpm check` | 저장소 점검. 위반이 있으면 종료 코드 1 |
 
-개발 서버 주소는 http://localhost:4200 이며 이 컴퓨터(127.0.0.1)에서만 접속된다. 포트는 `package.json`의 `dev`, `preview` 스크립트에서 바꾼다.
-
 ### 폴더
 
 ```
