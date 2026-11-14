@@ -44,15 +44,16 @@
 | `pnpm install` | 개발용 의존성 설치 |
 | `pnpm dev` | 개발 서버 실행 (http://localhost:4200). 저장하면 브라우저가 자동 갱신됨 |
 | `pnpm preview` | 개발 서버를 샘플 내용 모드로 실행 (http://localhost:4200) |
-| `pnpm build` | `web/public`과 `web/preview`를 합쳐 `dist/`를 만들고 이력서 내용을 미리 그림 |
-| `pnpm pdf` | 모바일 저장용 PDF(A4 세로, 가로)를 `web/preview/pdf/`에 만듦. Edge 또는 Chrome이 필요함 |
+| `pnpm build` | `web/public`과 `web/preview`를 합쳐 `dist/`를 만들고 이력서 내용을 미리 그림. 이어서 모바일 저장용 PDF가 최신인지 보고, 내용이 바뀌었고 Edge 또는 Chrome이 있으면 PDF도 다시 만듦 |
+| `pnpm pdf` | 모바일 저장용 PDF(A4 세로, 가로)를 항상 새로 만들어 `web/preview/pdf/`에 둠. Edge 또는 Chrome이 필요함 |
 | `pnpm check` | 저장소 점검. 위반이 있으면 종료 코드 1 |
 
 ### 모바일 PDF 저장
 
 - 모바일(화면 폭 768px 이하)에서 오른쪽 아래 SAVE 버튼을 누르면 모달이 열리고, 용지 방향(세로 또는 가로)을 고른 뒤 Save를 누르면 PDF 파일을 내려받음. PC에서는 같은 버튼이 인쇄 창(PDF로 저장)을 엶.
 - 내려받는 PDF는 미리 만들어 저장소에 둠(`web/preview/pdf/`). 배포 환경에는 브라우저가 없기 때문임.
-- 이력서 내용이나 인쇄 스타일(CSS)을 고친 뒤에는 `pnpm pdf`를 다시 실행하고 바뀐 PDF와 `manifest.txt`를 커밋함. 잊으면 `pnpm check`의 "저장용 PDF" 항목이 실패함.
+- 이력서 내용이나 인쇄 스타일(CSS)을 고친 뒤 내 컴퓨터에서 `pnpm build`를 실행하면 PDF가 자동으로 다시 만들어짐(내용이 그대로면 건너뜀). 바뀐 PDF와 `manifest.txt`를 커밋함. 잊으면 `pnpm check`의 "저장용 PDF" 항목이 실패함.
+- Cloudflare 빌드에는 Edge나 Chrome이 없으므로 그곳의 `pnpm build`는 PDF를 새로 만들지 않고 저장소의 PDF를 그대로 씀(경고 한 줄만 남기고 빌드는 계속됨). 그래서 PDF를 커밋하지 않으면 배포본의 PDF가 옛 내용이 됨.
 - 서버는 `/pdf/*`를 첨부 파일로 보냄(`Content-Disposition: attachment`, `web/public/_headers`). 그래서 앱 안 브라우저에서도 보기 화면이 아니라 내려받기로 처리됨.
 
 ### 폴더

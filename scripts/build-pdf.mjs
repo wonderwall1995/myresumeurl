@@ -1,8 +1,8 @@
-// 이력서 PDF 두 개(A4 세로, A4 가로)를 만든다. 실행: pnpm pdf
+// 이력서 PDF 두 개(A4 세로, A4 가로)를 만든다. 실행: pnpm pdf (항상 새로 만듦), pnpm build (내용이 바뀌었을 때만 자동으로 만듦)
 // 순서: 1) dist를 새로 만든다. 2) dist를 임시 서버로 열고 Edge나 Chrome(헤드리스)으로 인쇄용 PDF를 만든다.
 //       3) web/preview/pdf/ 에 PDF와 manifest.txt(재료의 해시)을 쓴다. 4) PDF가 dist에 들어가도록 dist를 다시 만든다.
-// 이력서 내용이나 인쇄 스타일을 고친 뒤에는 이 명령을 다시 실행해서 PDF를 커밋한다. 잊으면 pnpm check가 실패한다.
-// 배포 환경(Cloudflare 빌드)에는 브라우저가 없으므로 PDF는 저장소에 미리 만들어 둔다.
+// 이력서 내용이나 인쇄 스타일을 고치면 PDF가 바뀐다. 바뀐 PDF를 커밋한다. 잊으면 pnpm check가 실패한다.
+// 배포 환경(Cloudflare 빌드)에는 브라우저가 없으므로 PDF는 저장소에 미리 만들어 둔다. 그곳의 pnpm build는 PDF 만들기를 건너뛴다. (--auto)
 // 외부 패키지를 사용하지 않는다. 브라우저 경로가 다르면 환경 변수 PDF_BROWSER에 실행 파일 경로를 넣는다.
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -50,9 +50,8 @@ function findBrowser() {
     "/usr/bin/google-chrome",
     "/usr/bin/chromium",
   ].filter(Boolean);
-  const found = candidates.find((path) => existsSync(path));
-  if (!found) throw new Error("Edge 또는 Chrome을 찾지 못함. 환경 변수 PDF_BROWSER에 실행 파일 경로를 넣는다.");
-  return found;
+  // 없으면 null이다.
+  return candidates.find((path) => existsSync(path)) ?? null;
 }
 
 // dist를 읽기 전용으로 여는 임시 서버. 127.0.0.1에만 열고, dist 밖의 파일은 주지 않는다.
@@ -75,7 +74,9 @@ function serveDist() {
 async function openBrowser() {
   const port = 9300 + Math.floor(Math.random() * 400);
   const profile = join(tmpdir(), `resume-pdf-${Date.now()}`);
-  const child = spawn(findBrowser(), ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
+  const browserPath = findBrowser();
+  if (!browserPath) throw new Error("Edge 또는 Chrome을 찾지 못함. 환경 변수 PDF_BROWSER에 실행 파일 경로를 넣는다.");
+  const child = spawn(browserPath, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
   let page;
   for (let i = 0; i < 60 && !page; i += 1) {
     try {
@@ -140,29 +141,62 @@ function describe(buffer) {
   return { pages: (text.match(/\/Type\s*\/Page[^s]/g) ?? []).length, width: Number(media?.[1]), height: Number(media?.[2]) };
 }
 
-await build();
-const hash = hashPdfInputs(distDir);
-mkdirSync(outDir, { recursive: true });
-
-const { server, port } = await serveDist();
-const browser = await openBrowser();
-try {
-  for (const [direction, name] of Object.entries(PDF_FILES)) {
-    const buffer = await printPdf(browser, `http://127.0.0.1:${port}/main.html`, direction === "landscape");
-    const info = describe(buffer);
-    const isLandscape = info.width > info.height;
-    if (isLandscape !== (direction === "landscape")) throw new Error(`${name}: 방향이 맞지 않음 (${info.width} x ${info.height})`);
-    writeFileSync(join(outDir, name), buffer);
-    console.log(`[PDF] ${name}: ${info.pages}쪽, ${Math.round(buffer.length / 1024)}KB, ${direction === "landscape" ? "가로" : "세로"}`);
-  }
-} finally {
-  browser.close();
-  server.close();
+// 저장소의 PDF가 현재 재료(hash)로 만든 것인지 확인한다.
+function isFresh(hash) {
+  const manifest = join(outDir, PDF_MANIFEST);
+  return Object.values(PDF_FILES).every((name) => existsSync(join(outDir, name))) && existsSync(manifest) && readFileSync(manifest, "utf8").trim() === hash;
 }
 
-writeFileSync(join(outDir, PDF_MANIFEST), `${hash}\n`);
-// PDF가 dist에 들어가도록 다시 만든다. 재료의 해시는 PDF를 뺀 파일로 계산하므로 달라지지 않는다.
+// PDF 두 개를 만들어 저장한다. 두 개가 모두 만들어진 뒤에 저장하므로, 중간에 실패해도 저장소의 PDF는 그대로이다.
+async function generate(hash) {
+  const made = [];
+  const { server, port } = await serveDist();
+  const browser = await openBrowser();
+  try {
+    for (const [direction, name] of Object.entries(PDF_FILES)) {
+      const buffer = await printPdf(browser, `http://127.0.0.1:${port}/main.html`, direction === "landscape");
+      const info = describe(buffer);
+      const isLandscape = info.width > info.height;
+      if (isLandscape !== (direction === "landscape")) throw new Error(`${name}: 방향이 맞지 않음 (${info.width} x ${info.height})`);
+      made.push({ name, buffer });
+      console.log(`[PDF] ${name}: ${info.pages}쪽, ${Math.round(buffer.length / 1024)}KB, ${direction === "landscape" ? "가로" : "세로"}`);
+    }
+  } finally {
+    browser.close();
+    server.close();
+  }
+  mkdirSync(outDir, { recursive: true });
+  for (const { name, buffer } of made) writeFileSync(join(outDir, name), buffer);
+  writeFileSync(join(outDir, PDF_MANIFEST), `${hash}\n`);
+  // PDF가 dist에 들어가도록 다시 만든다. 재료의 해시는 PDF를 뺀 파일로 계산하므로 달라지지 않는다.
+  await build();
+  if (hashPdfInputs(distDir) !== hash) throw new Error("다시 만든 dist의 해시가 달라짐");
+  console.log("[PDF] web/preview/pdf/ 에 저장했다. 변경된 PDF와 manifest.txt를 커밋한다.");
+}
+
+// --auto: pnpm build가 이어서 실행하는 방식. 실패해도 빌드를 멈추지 않는다.
+//   PDF가 최신이면 건너뛴다. 최신이 아니고 브라우저가 있으면 새로 만든다.
+//   브라우저가 없으면(예: Cloudflare 빌드) 저장소의 PDF를 그대로 쓰고 경고만 남긴다. 오래된 PDF는 pnpm check가 잡는다.
+// 옵션이 없으면(pnpm pdf) 항상 새로 만들고, 실패하면 오류로 끝난다.
+const auto = process.argv.includes("--auto");
+
 await build();
-if (hashPdfInputs(distDir) !== hash) throw new Error("다시 만든 dist의 해시가 달라짐");
-console.log("[PDF] web/preview/pdf/ 에 저장했다. 변경된 PDF와 manifest.txt를 커밋한다.");
+const hash = hashPdfInputs(distDir);
+if (auto) {
+  if (isFresh(hash)) {
+    console.log("[PDF] 저장소의 PDF가 최신이라 건너뛴다.");
+    process.exit(0);
+  }
+  if (!findBrowser()) {
+    console.log("[PDF] 경고: Edge 또는 Chrome이 없어 PDF를 새로 만들지 못했다. 저장소의 PDF를 그대로 쓴다. 내용을 고쳤다면 내 컴퓨터에서 pnpm pdf를 실행해 커밋한다.");
+    process.exit(0);
+  }
+  console.log("[PDF] 내용이 바뀌어 PDF를 새로 만든다.");
+}
+try {
+  await generate(hash);
+} catch (error) {
+  if (!auto) throw error;
+  console.log(`[PDF] 경고: PDF를 만들지 못했다 (${error.message}). 저장소의 PDF를 그대로 쓴다.`);
+}
 process.exit(0);
