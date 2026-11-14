@@ -11,6 +11,8 @@
 //   도구: 위로, 아래로, 같은 종류 추가, 하위 줄 추가, 구분선 추가, 기호 고르기, 삭제, 상위 항목 선택. 삭제는 확인 창에서 한 번 더 묻는다.
 //   기호 고르기: 선택 창에서 글머리 기호를 고르면 커서가 있는 줄의 맨 앞에 "기호 + 공백"이 들어간다. (저장 전 변경이 된다.)
 //   하위 줄과 구분선은 글자 목록(ul.row-list)의 항목에서만 나온다. 하위 줄은 한 단계만이라 하위 줄에서는 숨는다.
+//   직책 행의 머리 칸(직책명, 기간)을 누르면 구분선 버튼으로 그 행 아래에 직책 사이 구분선을 넣는다. (roles 배열의 글자 "---")
+//   직책 사이 구분선도 선택해서 위아래 이동과 삭제를 할 수 있다. 구분선에서 "+"를 누르면 새 직책이 들어간다.
 //   번호가 있는 카드는 삭제할 수 없다. (번호를 다시 쓰지 않는 규칙이 있어서 IDE에서 사람이 한다.)
 // - 구조 변경(추가, 삭제, 이동)은 바로 저장된다. 저장하지 않은 글자 변경이 있으면 먼저 저장하라고 알린다.
 // - "되돌리기": 저장하지 않은 글자 변경이 있으면 그것을 되돌린다. 없으면 가장 최근 저장(글자, 추가, 삭제, 이동)을 취소한다.
@@ -514,8 +516,10 @@
     // 하위 줄과 구분선은 글자 목록(ul.row-list)의 항목에서만 넣는다. 하위 줄은 한 단계만이라 하위 줄에서는 숨긴다. 구분선 항목에는 하위 줄이 없다.
     const inRowList = item.tagName === "LI" && item.parentElement?.classList.contains("row-list");
     const isDivider = item.classList.contains("item-divider");
+    // 직책 행(div.card-role-row)의 머리 칸을 누르면 그 아래에 직책 사이 구분선을 넣을 수 있다. 구분선(div.role-divider) 자신에는 넣지 않는다.
+    const isRoleHead = item.classList.contains("card-box-head") && item.parentElement?.classList.contains("card-role-row");
     tools.querySelector('[data-act="child"]').hidden = !inRowList || isDivider;
-    tools.querySelector('[data-act="divider"]').hidden = !inRowList;
+    tools.querySelector('[data-act="divider"]').hidden = !(inRowList || isRoleHead);
     // 기호 버튼은 서식(data-md)이 켜진 글자가 있는 항목에서만 나온다. (소제목, 직책명 같은 글자에는 기호 마커가 없다.)
     tools.querySelector('[data-act="symbol"]').hidden = !textTarget(item);
     const remove = tools.querySelector('[data-act="delete"]');

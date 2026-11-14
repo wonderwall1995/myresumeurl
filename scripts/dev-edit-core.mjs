@@ -214,6 +214,19 @@ function isListItemNode(node) {
   return node?.type === "ObjectExpression" && isString(getProp(node, "text")) && !getProp(node, "label") && !getProp(node, "no") && !getProp(node, "id");
 }
 
+// 직책 행 목록(roles)의 직책인가. role, period, groups, body 중 하나를 가지고 번호(no, id)가 없는 객체이다.
+// 직책 사이에도 구분선("---")을 넣을 수 있다. (화면 코드: sections/career.js)
+function isRoleNode(node) {
+  if (node?.type !== "ObjectExpression" || getProp(node, "no") || getProp(node, "id")) return false;
+  return ["role", "period", "groups", "body"].some((name) => getProp(node, name));
+}
+
+// 구분선을 넣을 수 있는 배열인가. 글자 목록(항목, 구분선)이거나 직책 행 목록(직책, 구분선)이다. 둘이 섞인 배열은 아니다.
+function allowsDivider(container) {
+  const elements = container.elements;
+  return elements.every(isListItemNode) || elements.every((node) => isRoleNode(node) || (isString(node) && node.value === DIVIDER));
+}
+
 // 경로가 하위 줄(...sub[n])을 가리키는가. 하위 줄은 한 단계만 허용한다.
 const isSubPath = (steps) => steps.length >= 2 && steps[steps.length - 2].prop === "sub" && steps[steps.length - 1].index !== undefined;
 
@@ -224,8 +237,16 @@ function opInsert(source, op) {
     // 값을 주면 견본 글자 대신 그 값을 넣는다. 넣을 수 있는 값은 구분선뿐이다.
     if (op.value !== DIVIDER) throw new Error("넣을 수 있는 값은 구분선(---)뿐");
     if (isSubPath(steps)) throw new Error("하위 줄에는 구분선을 넣지 않음");
-    if (!container.elements.every(isListItemNode)) throw new Error("구분선을 넣을 수 없는 목록");
+    if (!allowsDivider(container)) throw new Error("구분선을 넣을 수 없는 목록");
     return { source: insertAfterElement(source, container, index, DIVIDER), path: withLastStep(op.path, { index: index + 1 }) };
+  }
+  // 직책 행 목록에서 구분선을 눌러 "+"를 하면 글자 "새 글자"가 아니라 가까운 직책의 모양을 따른 새 직책을 넣는다.
+  const isRoleList = container.elements.some(isRoleNode);
+  if (isRoleList && isString(node) && node.value === DIVIDER) {
+    const before = container.elements.slice(0, index).reverse().find(isRoleNode);
+    const template = before ?? container.elements.find(isRoleNode);
+    const value = blank(toValue(template));
+    return { source: insertAfterElement(source, container, index, value), path: withLastStep(op.path, { index: index + 1 }) };
   }
   const sibling = toValue(node);
   const value = blank(sibling);

@@ -91,6 +91,16 @@
   line-height: 1.4;
 }
 
+/* 직책 사이 구분선: 화면에서는 높이 없는 가는 선이라 누르기 어렵다. 편집 중에는 위아래로 누를 자리를 주고 점선 표시를 한다. */
+.dev-edit-on .role-divider {
+  height: 0;
+  padding-block: 8px;
+  background-clip: content-box;
+  outline: 1px dashed #9ca3af;
+  outline-offset: -1px;
+  cursor: pointer;
+}
+
 /* 프로젝트 타일: 열기 버튼의 넓은 눌림 영역을 끄고, 타일 안의 글자를 직접 누를 수 있게 한다. */
 .dev-edit-on .gallery-open {
   pointer-events: none;

@@ -15,3 +15,6 @@ dist/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# 개인 사진 원본 (저장소에 올리지 않는다)
+user-picture.jpg

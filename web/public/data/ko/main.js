@@ -13,6 +13,7 @@
 //   [02-career:interests-g1-text]        s02-career의 interests.groups 첫 번째 묶음의 text
 //   [02-career:focus-heading]            s02-career의 focus.heading (관심 분야 글의 소제목)
 //   [02-career:focus-text-b1]            s02-career의 focus.text 첫 번째 블록 (글머리 목록이면 focus-text-b2-i1처럼 항목 번호를 붙인다)
+//   [02-career:worklist-heading]         s02-career의 worklistHeading (Worklist 제목)
 //   [02-career.1:r1-head]      s02-career의 cards 중 no가 1인 카드, roles의 첫 번째 role
 //   [03-projects.2:title]      s03-projects의 cards 중 no가 2인 카드의 title (링크는 link, 링크 글자는 linkText)
 //   [07-education.1:title]     s07-education의 cards 중 no가 1인 카드의 title
@@ -40,6 +41,10 @@
 //   text는 소개 본문과 같은 블록 배열이다. 문자열은 단락(**굵게**, # 제목 등 글자 속 서식 가능, 줄바꿈은 \n), 배열은 글머리 목록이다.
 //   편집 모드에서 블록(단락과 목록)과 목록 항목을 추가, 이동, 삭제한다. 비워 두면 화면에 나타나지 않는다.
 //
+// 경력 섹션의 Worklist 제목 (type: "career"). 관심 분야 글(focus) 바로 아래, 카드 위에 한 번 나온다.
+//   worklistHeading: "Worklist"
+//   섹션 제목(heading)과 같은 모양의 제목이다. 경력 섹션 안에 속한다. 비워 두면 나오지 않는다.
+//
 // 글자 목록(경력 묶음의 items, 소개의 글머리 목록, 기타의 items)의 항목은 세 가지 모양이 있다.
 //   "글자"                          한 줄 항목. 앞에 기호와 공백("▸ 글자", "✓ 글자")을 쓰면 점 대신 그 기호가 마커이다.
 //   { text: "글자", sub: ["하위 줄"] }  아래에 한 단계 들여쓴 작은 글자(1pt 작음)가 붙는다. 하위 줄은 한 단계뿐이고 마커는 없다.
@@ -55,6 +60,8 @@
 //     roles: [ { role: "직책명", period: "2025.09 - 현재", body: ["항목1"] },
 //              { role: "이전 직책명", period: "2024.03 -", body: ["항목1"] } ] }
 //   roles는 화면에 나오는 순서대로 쓴다. 기업명, description(설명), 스킬은 카드 하나에 한 번만 쓴다.
+//   roles 안에 글자 "---"를 넣으면 그 자리에 직책 행 전체 폭의 구분선이 나온다. 예: roles: [{ ...QA Lead }, "---", { ...QA Manager }]
+//   편집 모드에서는 직책 행의 머리 칸(직책명, 기간)을 누르고 "구분선" 버튼을 누르면 그 행 아래에 들어간다. 구분선은 직책 번호(r1, r2)를 바꾸지 않는다.
 //   직책의 내용은 body 대신 groups로 쓸 수 있다. groups: [{ label: "소제목", items: ["항목1", "항목2"] }]
 //
 // 학력 (type: "education"). 카드 하나가 항목 하나이다.
@@ -88,7 +95,7 @@ export const mainPage = {
   toc: [],
   header: { name: "", photo: { src: "", alt: "" }, contact: [], about: { heading: "", text: [] } },
   sections: [
-    { id: "s02-career", type: "career", heading: "", interests: { heading: "", groups: [] }, focus: { heading: "", text: [] }, cards: [] },
+    { id: "s02-career", type: "career", heading: "", interests: { heading: "", groups: [] }, focus: { heading: "", text: [] }, worklistHeading: "", cards: [] },
     { id: "s01-intro", type: "intro", heading: "", text: "" },
     { id: "s07-education", type: "education", heading: "", cards: [] },
     { id: "s05-etc", type: "etc", heading: "", items: [] },

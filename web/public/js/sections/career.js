@@ -9,9 +9,11 @@
 //    직책의 내용은 묶음(stage.groups)이거나 글자 목록(stage.body)이다.
 //    묶음은 { label: "소제목", items: ["항목", ...] } 배열이다. 소제목 아래에 항목이 불릿으로 나온다.
 //    직책 구간은 roles 배열의 순서대로 나온다. 이름표는 <카드>-r1-head, <카드>-r1-g1-list 형태이다.
+//    roles 배열에 글자 "---"를 넣으면 그 자리에 구분선이 나온다. 이름표는 <카드>-d1 형태이고, 직책 번호(r1, r2)에는 영향이 없다.
 //
 // 섹션 제목 아래에는 실행 분야(data.interests)가 한 번 나온다. 카드 앞에 놓인다. (renderInterests)
 // 그 바로 아래에 관심 분야 글(data.focus)이 한 번 나온다. (renderFocus)
+// 그 아래에 Worklist 제목(data.worklistHeading)이 한 번 나오고, 이어서 카드(경력 목록)가 나온다. (renderWorklistHeading)
 // 직책이 바뀐 카드는 테두리가 없다. 직책마다 행(div.card-role-row)이 있고, 행은 왼쪽 칸(머리)과 오른쪽 칸(내용)으로 나뉜다.
 // 박스는 세로로 쌓인다. 기업명과 직책명은 같은 줄에 놓고 근속기간은 다음 줄에 놓는다.
 // 함수의 base(p)는 카드의 편집 경로이다. 편집 모드에서 요소와 데이터 위치를 잇는다. (lib/edit-path.js)
@@ -19,7 +21,7 @@ import { el } from "../lib/dom.js";
 import { partId, testAttr } from "../lib/ids.js";
 import { cardPath, itemPath, sectionPath } from "../lib/edit-path.js";
 import { box, renderCards } from "../common/card.js";
-import { createBody, createList, renderHeading } from "../common/section-parts.js";
+import { createBody, createList, DIVIDER, renderHeading } from "../common/section-parts.js";
 
 // 기업명과 직책명을 제목(h3) 하나에 담는다. 두 값 사이에 공백을 둔다.
 // baseId는 이름표의 앞부분이다. p는 카드의 편집 경로이다.
@@ -81,10 +83,20 @@ function buildRoles(card, id, p) {
     companyBox.length > 0 ? el("div", { className: "card-company-box" }, companyBox) : null,
     box(id, "skills", [createList(card.skills, partId(id, "skills-list"), "tag-list", `${p}.skills`)]),
   ];
+  // 직책 이름표의 번호(r1, r2)는 구분선을 세지 않는다. 구분선을 넣거나 빼도 직책의 이름표가 바뀌지 않는다.
+  let roleCount = 0;
+  let dividerCount = 0;
   card.roles.forEach((stage, index) => {
-    const stageName = `r${index + 1}`;
-    const stageId = partId(id, stageName);
     const rp = itemPath(`${p}.roles`, index);
+    // 글자 "---"는 직책 행 사이의 구분선이다. 행 전체 폭의 검정 1px 선이다. (예: QA Manager 시절과 QA Lead 시절을 나눈다.)
+    if (stage === DIVIDER) {
+      dividerCount += 1;
+      boxes.push(el("div", { className: "role-divider", attrs: { role: "separator", ...testAttr(partId(id, `d${dividerCount}`)) }, editItem: rp }));
+      return;
+    }
+    roleCount += 1;
+    const stageName = `r${roleCount}`;
+    const stageId = partId(id, stageName);
     // 직책 하나는 행 하나이다. 왼쪽 칸에 머리, 오른쪽 칸에 내용이 놓인다. (CSS: card-role-row)
     const cells = [
       box(id, `${stageName}-head`, [createStageHead(stage, stageId, rp)], "head", rp),
@@ -153,11 +165,27 @@ function renderFocus(root, data) {
   if (cells.length > 0) root.append(el("div", { className: "card-role-row interests-row focus-row" }, cells));
 }
 
+// Worklist 제목 (data.worklistHeading). 관심 분야 글(renderFocus) 바로 아래, 카드 앞에 한 번 나온다.
+// 섹션 제목(h2)과 같은 모양의 제목이다. (CSS가 섹션 바로 아래의 h2를 같은 모양으로 그린다.) 경력 섹션 안에 속한다.
+// 이름표는 <섹션>-worklist-heading 이다. 값이 비어 있으면 나오지 않는다.
+function renderWorklistHeading(root, data) {
+  if (!data.worklistHeading) return;
+  root.append(
+    el("h2", {
+      text: data.worklistHeading,
+      className: "career-worklist-heading",
+      attrs: testAttr(partId(data.id, "worklist-heading")),
+      edit: `${sectionPath(data.id)}.worklistHeading`,
+    }),
+  );
+}
+
 export function renderCareer(root, data) {
   if (!data.cards?.length) return;
   renderHeading(root, data);
   renderInterests(root, data);
   renderFocus(root, data);
+  renderWorklistHeading(root, data);
   const base = sectionPath(data.id);
   renderCards(root, data, (card, id) => {
     const p = cardPath(base, card.no);

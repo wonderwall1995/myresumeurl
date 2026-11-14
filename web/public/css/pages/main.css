@@ -1,9 +1,1 @@
 /* main 페이지 전용 스타일. 다른 페이지가 쓰지 않는 규칙만 둔다. 디자인 확정 후 채운다. */
-
-/* 경력(Demo) 구역 (s09-career-demo)
-   빨간 가는 실선(1px) 테두리를 구역 안쪽에 그린다. (사용자 요청)
-   outline은 크기와 여백을 바꾸지 않고, 음수 offset이 선을 구역 안쪽으로 넣는다. 그래서 다른 내용의 위치가 움직이지 않는다. */
-#s09-career-demo {
-  outline: 1px solid var(--color-demo-line);
-  outline-offset: -1px;
-}

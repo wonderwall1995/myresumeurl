@@ -17,8 +17,7 @@ import http from "node:http";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFileSync, renameSync, existsSync, statSync, watch, writeFileSync } from "node:fs";
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
-import { applyOps } from "./dev-edit-core.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = join(root, "web", "public");
@@ -53,6 +52,13 @@ const TYPES = {
 };
 
 const log = (tag, message) => console.log(`[${tag}] ${message}`);
+
+// 편집 규칙(dev-edit-core.mjs)은 저장 요청마다 파일 수정 시각을 보고 다시 불러온다.
+// 서버를 켠 뒤에 규칙 파일을 고쳐도 서버를 다시 켜지 않아도 된다. (화면용 dev-edit.js는 원래 요청마다 읽는다. 둘이 어긋나지 않게 한다.)
+const editCoreFile = join(root, "scripts", "dev-edit-core.mjs");
+function loadEditCore() {
+  return import(`${pathToFileURL(editCoreFile).href}?v=${statSync(editCoreFile).mtimeMs}`);
+}
 
 // ---------- 규칙 파일 읽기 (요청마다 읽어서 수정이 바로 반영된다) ----------
 // _headers는 경로 규칙의 목록이다. 들여쓰지 않은 줄이 경로(예: /*, /pdf/*)이고, 그 아래 들여쓴 줄이 그 경로의 헤더이다.
@@ -195,6 +201,7 @@ async function handleEdit(request, response) {
   try {
     const { ops } = JSON.parse(body);
     const source = readFileSync(editFile, "utf8");
+    const { applyOps } = await loadEditCore();
     const result = applyOps(source, ops);
     if (result.source !== source) {
       writeData(result.source);

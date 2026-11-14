@@ -12,8 +12,6 @@
   --color-line: rgb(0 0 0 / 0.15);
   /* 목차 전용 주황 계열. 화면에서만 쓰고 인쇄에는 나오지 않는다. (사용자 요청: 차분한 Claude 주황)
      글자와 바탕의 대비를 맞췄다. 진한 주황 위 흰 글자는 약 5:1, 연한 바탕 위 진한 글자는 약 7:1이다. */
-  /* 경력(Demo) 구역의 테두리 선. 초안 구역을 구별하는 용도이다. 흑백 인쇄에서는 회색 가는 선으로 나온다. */
-  --color-demo-line: #d32f2f;
   --color-toc-panel: #f7ede6;
   --color-toc-hover-bg: #eed8cb;
   --color-toc-bg: #fbeee8;
@@ -56,8 +54,11 @@
   --intro-max-width: 800px;
   /* 섹션 제목 아래 글자 요소(카드 제외)의 좌우 여백 */
   --section-text-padding: 10px;
-  /* 경력의 직책 행에서 왼쪽 칸(직책명, 근속기간)의 폭 */
-  --role-column-width: 11rem;
+  /* 경력의 직책 행에서 왼쪽 칸(직책명, 근속기간)의 폭. 오른쪽 내용과의 간격을 줄이고 인쇄의 줄바꿈을 줄이려고 11rem에서 9rem으로 줄였다. (사용자 요청) */
+  --role-column-width: 9rem;
+  /* 경력의 직책 행 사이 간격의 절반. 앞 행 아래 여백과 다음 행 위 여백이 각각 이 값이다. 구분선이 있으면 선 위와 아래가 각각 이 값이다.
+     원래 값(3단위 + 본문 한 줄)의 72%이다. 인쇄는 print.css가 pt로 다시 정한다. */
+  --role-row-gap: calc((var(--space-unit) * 3 + var(--line-height-body) * 1rem) * 0.72);
   /* 글자 속 제목(# ## ###)의 크기. 블록 모드의 여러 줄 글자에서만 쓰인다. (lib/markdown.js) */
   --md-h1-size: 1.5rem;
   --md-h2-size: 1.25rem;
