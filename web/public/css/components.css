@@ -636,7 +636,7 @@ body:has(.modal[open]) {
   position: absolute;
   right: 0;
   bottom: 100%;
-  width: 15rem;
+  width: 240px;
   margin: 0 0 var(--space-unit);
   padding: calc(var(--space-unit) * 1.5);
   border: 1px solid var(--color-text);
@@ -652,8 +652,14 @@ body:has(.modal[open]) {
   display: none;
 }
 
-/* 인쇄 위젯
-   검정 바탕에 흰 글자이고, 위에 프린터 아이콘, 아래에 PDF 글자가 놓인다. */
+/* PDF 버튼
+   검정 바탕에 흰 글자이다. PC는 위에 프린터 아이콘, 아래에 "PDF" 글자이다.
+   모바일은 위에 "SAVE" 글자, 아래에 저장 아이콘이다. 글자와 아이콘은 모두 들어 있고 화면 폭에 따라 한쪽만 보인다. */
+.widget-label-save,
+.widget-icon-save {
+  display: none;
+}
+
 .print-widget {
   display: flex;
   flex-direction: column;
@@ -669,6 +675,7 @@ body:has(.modal[open]) {
   font-weight: var(--font-weight-bold);
   line-height: 1;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .print-widget:focus-visible {
@@ -696,6 +703,8 @@ body:has(.modal[open]) {
   min-width: 0;
   padding: 0;
   border: 0;
+  /* 빠르게 연속으로 눌러도 더블탭 확대로 처리되지 않게 한다. */
+  touch-action: manipulation;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -720,34 +729,157 @@ body:has(.modal[open]) {
   outline-offset: -4px;
 }
 
-@media (max-width: 768px) {
-  .font-widget {
-    display: flex;
-  }
+/* 저장 모달 (모바일). 용지 방향(세로/가로)을 고르고 Save를 누르면 PDF를 내려받는다. 흑백 인쇄와 무관한 화면 전용 창이다.
+   크기는 px이다. 글자 크기 단계의 영향을 받지 않는다. */
+.save-dialog {
+  box-sizing: border-box;
+  width: min(320px, calc(100vw - 32px));
+  padding: 0;
+  border: 2px solid var(--color-text);
+  border-radius: calc(var(--radius) / 2);
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-/* 글자 크기 단계 (글자 크기 버튼이 html의 data-text-size를 바꾼다)
-   기준 글자 크기(html)만 바꾸면 rem으로 정한 모든 글자와 간격이 같은 비율로 바뀐다.
-   퍼센트로 정하므로 브라우저의 글꼴 크기 설정도 함께 반영된다. 인쇄에는 적용하지 않는다. (인쇄는 print.css가 11pt로 정한다.) */
-@media screen {
+.save-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.save-dialog-body {
+  padding: calc(var(--space-unit) * 3);
+}
+
+.save-dialog h2 {
+  margin: 0 0 var(--space-unit);
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-h3);
+}
+
+.save-dialog p {
+  margin: 0 0 calc(var(--space-unit) * 2);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.save-choices,
+.save-actions {
+  display: flex;
+  gap: var(--space-unit);
+}
+
+.save-actions {
+  margin-block-start: calc(var(--space-unit) * 3);
+}
+
+.save-dialog button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: calc(var(--space-unit) * 1.5) var(--space-unit);
+  border: 1px solid var(--color-text);
+  border-radius: calc(var(--radius) / 2);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* 고른 방향은 검정 바탕으로 구분한다. (흑백에서도 구분된다.) */
+.save-dialog .save-choice[aria-pressed="true"],
+.save-dialog .save-submit {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.save-dialog button:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+/* 모바일(화면 폭 768px 이하, 화면 전용)
+   1) 글자 크기: 기본은 11px이다. 글자 크기 버튼이 html의 data-text-size(-6 ~ 6)를 바꾼다. 줄이는 쪽은 0.5px, 키우는 쪽은 1px 단위이다.
+      기준 글자 크기(html)만 바꾸면 rem으로 정한 모든 글자와 간격이 같은 비율로 바뀐다.
+      퍼센트로 정하므로 브라우저의 글꼴 크기 설정(기본 16px)도 함께 반영된다. 인쇄에는 적용하지 않는다. (인쇄는 print.css가 11pt로 정한다.)
+   2) 목차 줄과 위젯 묶음은 글자 크기를 바꿔도 크기가 변하지 않는다. 이 안의 토큰을 px로 다시 정해, 위의 rem 값을 쓰지 않게 한다.
+   3) PDF 버튼은 저장 아이콘과 "SAVE" 글자로 바뀌고, 글자 크기 버튼이 나타난다. */
+@media screen and (max-width: 768px) {
+  html {
+    font-size: 68.75%;
+  }
+
+  html[data-text-size="-6"] {
+    font-size: 50%;
+  }
+
+  html[data-text-size="-5"] {
+    font-size: 53.125%;
+  }
+
+  html[data-text-size="-4"] {
+    font-size: 56.25%;
+  }
+
+  html[data-text-size="-3"] {
+    font-size: 59.375%;
+  }
+
   html[data-text-size="-2"] {
-    font-size: 87.5%;
+    font-size: 62.5%;
   }
 
   html[data-text-size="-1"] {
-    font-size: 93.75%;
+    font-size: 65.625%;
   }
 
   html[data-text-size="1"] {
-    font-size: 112.5%;
+    font-size: 75%;
   }
 
   html[data-text-size="2"] {
-    font-size: 125%;
+    font-size: 81.25%;
   }
 
   html[data-text-size="3"] {
-    font-size: 137.5%;
+    font-size: 87.5%;
+  }
+
+  html[data-text-size="4"] {
+    font-size: 93.75%;
+  }
+
+  html[data-text-size="5"] {
+    font-size: 100%;
+  }
+
+  html[data-text-size="6"] {
+    font-size: 106.25%;
+  }
+
+  .toc,
+  .widget-stack {
+    --space-unit: 8px;
+    --space-side: 24px;
+    --radius: 24px;
+    --font-size-body: 16px;
+    --font-size-small: 14px;
+    --font-size-h3: 18px;
+  }
+
+  .widget-label-print,
+  .widget-icon-print {
+    display: none;
+  }
+
+  .widget-label-save,
+  .widget-icon-save {
+    display: block;
+  }
+
+  .font-widget {
+    display: flex;
   }
 }
 

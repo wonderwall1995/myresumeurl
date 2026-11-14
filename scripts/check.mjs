@@ -6,6 +6,7 @@ import { execSync } from "node:child_process";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build, distDir } from "./build.mjs";
+import { hashPdfInputs, PDF_FILES, PDF_MANIFEST } from "./pdf-hash.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // 점검 대상은 배포 폴더(dist)이다. 점검을 시작할 때 pnpm build와 같은 방식으로 새로 만든다.
@@ -220,6 +221,23 @@ check("보안 헤더 (_headers)", () => {
   if (!/default-src\s+'none'/.test(csp)) problems.push("CSP에 default-src 'none'이 없음");
   if (/unsafe-inline|unsafe-eval/.test(csp)) problems.push("CSP에 unsafe-inline 또는 unsafe-eval이 있음");
   if (/(^|\s)\*(\s|;|$)/.test(csp)) problems.push("CSP에 와일드카드(*)가 있음");
+  return problems;
+});
+
+// 6-1. 모바일 저장용 PDF가 최신인지 확인한다. (web/preview/pdf/ 의 PDF는 pnpm pdf가 만든다.)
+// 이력서 내용이나 인쇄 스타일을 고치고 pnpm pdf를 다시 실행하지 않으면 PDF가 옛 내용이 되므로 막는다.
+check("저장용 PDF (dist/pdf)", () => {
+  const problems = [];
+  const dir = join(publicDir, "pdf");
+  for (const name of Object.values(PDF_FILES)) {
+    if (!existsSync(join(dir, name))) problems.push(`${name}가 없음. pnpm pdf를 실행한다.`);
+  }
+  const manifestPath = join(dir, PDF_MANIFEST);
+  if (!existsSync(manifestPath)) {
+    problems.push(`${PDF_MANIFEST}가 없음. pnpm pdf를 실행한다.`);
+  } else if (read(manifestPath).trim() !== hashPdfInputs(publicDir)) {
+    problems.push("PDF가 현재 내용과 다름. pnpm pdf를 다시 실행하고 PDF를 커밋한다.");
+  }
   return problems;
 });
 

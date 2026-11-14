@@ -55,12 +55,20 @@ const TYPES = {
 const log = (tag, message) => console.log(`[${tag}] ${message}`);
 
 // ---------- 규칙 파일 읽기 (요청마다 읽어서 수정이 바로 반영된다) ----------
-function readHeaders() {
+// _headers는 경로 규칙의 목록이다. 들여쓰지 않은 줄이 경로(예: /*, /pdf/*)이고, 그 아래 들여쓴 줄이 그 경로의 헤더이다.
+// 요청 경로에 맞는 규칙의 헤더를 위에서 아래로 합친다. 별표(*)는 어떤 글자 열과도 맞는다. (Cloudflare의 방식)
+function readHeaders(urlPath) {
   const headers = {};
   const text = readFileSync(join(publicDir, "_headers"), "utf8");
+  let applies = false;
   for (const line of text.split(/\r?\n/)) {
+    if (/^\S/.test(line) && !line.startsWith("#")) {
+      const pattern = new RegExp(`^${line.trim().split("*").map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`);
+      applies = pattern.test(urlPath);
+      continue;
+    }
     const match = line.match(/^\s+([A-Za-z-]+):\s*(.*)$/);
-    if (match) headers[match[1]] = match[2];
+    if (applies && match) headers[match[1]] = match[2];
   }
   // 개발용 완화: 갱신 알림 연결과 오류 보고를 위해 connect-src를 'self'로 바꾼다.
   const csp = Object.keys(headers).find((name) => name.toLowerCase() === "content-security-policy");
@@ -293,7 +301,7 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  const headers = readHeaders();
+  const headers = readHeaders(path);
   if (request.method !== "GET" && request.method !== "HEAD") {
     log("405", `${request.method} ${path}`);
     return send(response, 405, headers, "");
