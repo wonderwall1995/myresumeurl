@@ -616,15 +616,45 @@ body:has(.modal[open]) {
   overflow: hidden;
 }
 
-/* 인쇄 위젯
+/* 위젯 묶음 (인쇄 버튼과 글자 크기 버튼)
    오른쪽 아래에 고정된다. 개발 서버의 Inspector 버튼(왼쪽 아래)과 마주 본다.
-   검정 바탕에 흰 글자이고, 위에 프린터 아이콘, 아래에 PDF 글자가 놓인다. 인쇄에는 나오지 않는다. (print.css)
-   모달 창(<dialog>)은 맨 위 층에 뜨므로 모달이 열리면 이 버튼은 모달 뒤에 가려진다. */
-.print-widget {
+   위쪽은 인쇄 버튼, 아래쪽은 글자 크기 버튼이다. 모두 가운데 정렬이다. 인쇄에는 나오지 않는다. (print.css)
+   모달 창(<dialog>)은 맨 위 층에 뜨므로 모달이 열리면 이 묶음은 모달 뒤에 가려진다. */
+.widget-stack {
   position: fixed;
   right: 16px;
   bottom: 16px;
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space-unit) * 0.75);
+}
+
+/* 인쇄 창이 열리지 않았을 때 보이는 안내 문구. 묶음 위쪽에 떠 있고, 묶음의 크기를 바꾸지 않는다. */
+.widget-notice {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  width: 15rem;
+  margin: 0 0 var(--space-unit);
+  padding: calc(var(--space-unit) * 1.5);
+  border: 1px solid var(--color-text);
+  border-radius: calc(var(--radius) / 2);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.widget-notice[hidden] {
+  display: none;
+}
+
+/* 인쇄 위젯
+   검정 바탕에 흰 글자이고, 위에 프린터 아이콘, 아래에 PDF 글자가 놓인다. */
+.print-widget {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -644,6 +674,81 @@ body:has(.modal[open]) {
 .print-widget:focus-visible {
   outline-color: var(--color-text);
   outline-offset: 3px;
+}
+
+/* 글자 크기 버튼 ([+] [−])
+   인쇄 버튼 바로 아래에 가운데 정렬로 놓인다. 폭은 인쇄 버튼의 약 80%이고 높이는 약 40%이다. (사용자 요청)
+   높이는 폭과 가로세로 비율(aspect-ratio)로 정한다. 흰 바탕에 검정 테두리이다. 휴대폰 폭에서만 보인다. */
+.font-widget {
+  display: none;
+  box-sizing: border-box;
+  width: 80%;
+  aspect-ratio: 1.8 / 1;
+  border: 1px solid var(--color-text);
+  border-radius: calc(var(--radius) / 2);
+  overflow: hidden;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.font-widget button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.font-widget button + button {
+  border-inline-start: 1px solid var(--color-text);
+}
+
+/* 단계 끝에 닿으면 버튼이 꺼진다. 흑백 인쇄 환경이 아니므로 흐림으로 구분한다. */
+.font-widget button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.font-widget button:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: -4px;
+}
+
+@media (max-width: 768px) {
+  .font-widget {
+    display: flex;
+  }
+}
+
+/* 글자 크기 단계 (글자 크기 버튼이 html의 data-text-size를 바꾼다)
+   기준 글자 크기(html)만 바꾸면 rem으로 정한 모든 글자와 간격이 같은 비율로 바뀐다.
+   퍼센트로 정하므로 브라우저의 글꼴 크기 설정도 함께 반영된다. 인쇄에는 적용하지 않는다. (인쇄는 print.css가 11pt로 정한다.) */
+@media screen {
+  html[data-text-size="-2"] {
+    font-size: 87.5%;
+  }
+
+  html[data-text-size="-1"] {
+    font-size: 93.75%;
+  }
+
+  html[data-text-size="1"] {
+    font-size: 112.5%;
+  }
+
+  html[data-text-size="2"] {
+    font-size: 125%;
+  }
+
+  html[data-text-size="3"] {
+    font-size: 137.5%;
+  }
 }
 
 /* 목차
