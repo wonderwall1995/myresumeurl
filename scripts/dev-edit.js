@@ -56,6 +56,7 @@
   let selected = null;
   let symbols = null; // 기호 선택 창
   let toast = null;
+  let imageInput = null; // 사진 파일 선택 입력 (보이지 않음)
   let toastTimer = null;
   let md = null; // lib/markdown.js. 편집 중 굵게와 제목 표시, 편집을 끈 뒤의 화면 표시에 쓴다.
   let composing = false; // 한글 같은 조합 입력 중인지. 조합 중에는 글자 모양을 다시 입히지 않는다.
@@ -136,6 +137,66 @@
   }
 
   const send = (ops) => post("/__dev/edit", { ops });
+
+  // ---------- 사진 올리기 ----------
+  // 프로젝트 타일(li.gallery-item)을 선택하고 "사진" 버튼을 누르면 사진 파일을 고른다.
+  // 브라우저에서 가로 1200px 이하의 webp로 줄인 뒤 서버(POST /__dev/edit/image)에 보낸다. 서버가 파일을 저장하고 main.js의 image.src를 바꾼다.
+  // 사진을 줄이는 이유: 큰 원본을 작게 보여 주면 윤곽에 계단이 생기고 파일도 무겁다.
+  const IMAGE_MAX_WIDTH = 1200;
+  const IMAGE_QUALITY = 0.85;
+
+  // 사진 파일을 webp Blob으로 줄인다. 원본이 더 작으면 늘리지 않는다.
+  async function toWebp(file) {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, IMAGE_MAX_WIDTH / bitmap.width);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const context = canvas.getContext("2d");
+    context.imageSmoothingQuality = "high";
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise((done) => canvas.toBlob(done, "image/webp", IMAGE_QUALITY));
+    if (!blob || blob.type !== "image/webp") throw new Error("이 브라우저는 webp로 바꾸지 못함");
+    return blob;
+  }
+
+  async function uploadImage(path, file) {
+    if (!file.type.startsWith("image/")) {
+      say("사진이 아닙니다", "이미지 파일(jpg, png, webp)을 고르세요.", "error");
+      return;
+    }
+    say("사진을 올리는 중", `${file.name}`);
+    try {
+      const blob = await toWebp(file);
+      const response = await fetch(`/__dev/edit/image?path=${encodeURIComponent(path)}`, {
+        method: "POST",
+        headers: { "Content-Type": "image/webp", "X-Dev-Token": token },
+        body: blob,
+      });
+      const result = await response.json().catch(() => ({ ok: false, error: "응답을 읽지 못함" }));
+      if (typeof result.undo === "number") undoDepth = result.undo;
+      if (!response.ok || !result.ok) throw new Error(result.error || `오류 ${response.status}`);
+      handoffToast("사진을 올렸습니다", `${result.src} (${Math.round(blob.size / 1024)}KB)`);
+      say("사진을 올렸습니다", "화면을 새로 고칩니다.", "success");
+    } catch (error) {
+      say("사진을 올리지 못했습니다", error.message, "error");
+    }
+  }
+
+  // 사진 파일 선택 창을 연다. 저장하지 않은 글자 변경이 있으면 화면이 새로고침될 때 사라지므로 먼저 저장하게 한다.
+  function pickImage(path) {
+    if (pending.size > 0) {
+      say("먼저 저장하세요", "저장하지 않은 변경이 있습니다. 사진을 올리면 화면이 새로고침됩니다.", "error");
+      return;
+    }
+    imageInput.onchange = () => {
+      const file = imageInput.files[0];
+      imageInput.value = "";
+      if (file) uploadImage(path, file);
+    };
+    imageInput.click();
+  }
 
   // 되돌리기 기록은 편집을 켜 둔 동안에만 쓴다. 켤 때와 끌 때 서버의 기록을 비운다.
   // 새로고침으로 이어지는 켜짐(저장 뒤 자동 새로고침 포함)에서는 비우지 않는다.
@@ -431,9 +492,11 @@
   // 이미 기호가 있으면 새 기호로 바꾸고, "지움"은 맨 앞 기호만 지운다. 바꾼 글자는 저장 전 변경이 되며 저장 막대에서 저장한다.
 
   // 선택한 항목에서 기호를 넣을 글자 요소를 찾는다. 서식(data-md)이 켜진 글자만 기호 마커가 되므로 그런 요소만 대상이다.
+  // label 모드(프로젝트 링크)는 줄 앞 기호가 없는 글자라 제외한다.
+  const MD_TEXT = '[data-edit][data-md]:not([data-md="label"])';
   function textTarget(item) {
-    if (item.matches?.("[data-edit][data-md]")) return item;
-    return item.querySelector?.("[data-edit][data-md]") ?? null;
+    if (item.matches?.(MD_TEXT)) return item;
+    return item.querySelector?.(MD_TEXT) ?? null;
   }
 
   // 글자를 새로 넣고 저장 전 변경으로 기록한다. (onInput과 같은 처리)
@@ -519,6 +582,8 @@
     // 직책 행(div.card-role-row)의 머리 칸을 누르면 그 아래에 직책 사이 구분선을 넣을 수 있다. 구분선(div.role-divider) 자신에는 넣지 않는다.
     const isRoleHead = item.classList.contains("card-box-head") && item.parentElement?.classList.contains("card-role-row");
     tools.querySelector('[data-act="child"]').hidden = !inRowList || isDivider;
+    // 사진 버튼은 프로젝트 타일(li.gallery-item)에서만 나온다.
+    tools.querySelector('[data-act="image"]').hidden = !item.classList.contains("gallery-item");
     tools.querySelector('[data-act="divider"]').hidden = !(inRowList || isRoleHead);
     // 기호 버튼은 서식(data-md)이 켜진 글자가 있는 항목에서만 나온다. (소제목, 직책명 같은 글자에는 기호 마커가 없다.)
     tools.querySelector('[data-act="symbol"]').hidden = !textTarget(item);
@@ -626,6 +691,8 @@
       structural([{ type: "insertChild", path }]);
     } else if (act === "divider") {
       structural([{ type: "insert", path, value: "---" }]);
+    } else if (act === "image") {
+      pickImage(path);
     } else if (act === "symbol") {
       toggleSymbols();
     } else if (act === "delete") {
@@ -694,6 +761,7 @@
       ["add", "+", "아래에 같은 종류 추가"],
       ["child", "+ 하위", "아래에 한 단계 들여쓴 하위 줄 추가 (글자가 1pt 작음)"],
       ["divider", "구분선", "이 줄 아래에 구분선 추가"],
+      ["image", "사진", "이 프로젝트의 사진 올리기 (jpg, png, webp. 자동으로 줄여 저장)"],
       ["symbol", "기호", "줄 맨 앞의 글머리 기호 고르기 (커서가 있는 줄에 적용)"],
       ["delete", "삭제", "삭제"],
       ["parent", "상위", "상위 항목 선택"],
@@ -726,7 +794,12 @@
     toast.title = "누르면 닫힙니다";
     toast.addEventListener("click", () => toast.matches(":popover-open") && toast.hidePopover());
 
-    document.body.append(toggle, bar, tools, symbols, toast);
+    imageInput = document.createElement("input");
+    imageInput.type = "file";
+    imageInput.accept = "image/*";
+    imageInput.hidden = true;
+
+    document.body.append(toggle, bar, tools, symbols, toast, imageInput);
   }
 
   async function init() {

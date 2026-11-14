@@ -17,6 +17,8 @@
 //   insertChild  항목 아래에 하위 줄(sub 배열의 글자)을 하나 더한다. 하위 줄은 한 단계만 있다.
 //           글자 항목은 { text, sub: [...] } 객체로 바뀐다. 하위 줄을 모두 지우면 다시 글자 항목으로 돌아간다. (delete)
 //   move    항목을 한 칸 위(-1) 또는 아래(+1)로 옮긴다.
+//   setImage  카드의 사진(image.src)을 바꾼다. 카드에 image가 없으면 만든다. path는 카드 경로이고 src는 /images/ 아래 webp 파일이다.
+//           (사진 파일 자체는 개발 서버가 올려 받아 저장한다. dev-server.mjs의 /__dev/edit/image)
 //   delete  항목을 지운다. 번호(no)나 이름표(id)가 있는 항목(카드, 섹션)과 배열의 마지막 항목은 지우지 않는다.
 //           카드와 섹션의 번호는 한 번 쓰면 다시 쓰지 않는 규칙이 있어서, 그런 삭제는 IDE에서 사람이 한다.
 // 섹션 추가와 섹션 이동은 이 도구의 범위 밖이다. (구조가 크게 바뀌므로 상의해서 IDE에서 한다.)
@@ -282,6 +284,32 @@ function opInsertChild(source, op) {
   return { source: insertAfterElement(source, sub, last, PLACEHOLDER), path: `${op.path}.sub[${last + 1}]` };
 }
 
+// 카드 경로. 예: sections[id=s03-projects].cards[no=2]
+export const CARD_PATH = /^sections\[id=[A-Za-z0-9-]+\]\.cards\[no=\d+\]$/;
+// 올려 받은 사진의 주소. 개발 서버가 만드는 이름 모양과 같다.
+export const IMAGE_SRC = /^\/images\/[A-Za-z0-9._-]+\.webp$/;
+
+// 카드의 사진 주소를 바꾼다. image가 있으면 src만 바꾸고(설명 alt는 그대로), 없으면 image를 새로 만든다.
+function opSetImage(source, op) {
+  if (!CARD_PATH.test(op.path ?? "")) throw new Error("카드 경로가 아님");
+  if (!IMAGE_SRC.test(op.src ?? "")) throw new Error("사진 주소 형식 오류");
+  const { node: card } = resolve(pageOf(source), op.path);
+  if (card.type !== "ObjectExpression") throw new Error(`카드가 아님: ${op.path}`);
+  const image = getProp(card, "image");
+  if (image) {
+    const src = getProp(image, "src");
+    if (isString(src)) return { source: source.slice(0, src.start) + JSON.stringify(op.src) + source.slice(src.end) };
+    throw new Error("image에 src가 없음 (IDE에서 고쳐야 함)");
+  }
+  const title = getProp(card, "title");
+  const alt = isString(title) ? `${title.value} 사진` : "";
+  const last = card.properties[card.properties.length - 1];
+  const indent = lineIndent(source, last.start);
+  const text = withNewlines(`,
+${indent}image: { src: ${JSON.stringify(op.src)}, alt: ${JSON.stringify(alt)} }`, source);
+  return { source: source.slice(0, last.end) + text + source.slice(last.end) };
+}
+
 function opMove(source, op) {
   if (op.dir !== -1 && op.dir !== 1) throw new Error("이동 방향 오류");
   const { container, index, steps } = resolve(pageOf(source), op.path);
@@ -345,6 +373,7 @@ export function applyOps(source, ops) {
     else if (op?.type === "insert") outcome = opInsert(current, op);
     else if (op?.type === "insertChild") outcome = opInsertChild(current, op);
     else if (op?.type === "move") outcome = opMove(current, op);
+    else if (op?.type === "setImage") outcome = opSetImage(current, op);
     else if (op?.type === "delete") outcome = opDelete(current, op);
     else throw new Error(`알 수 없는 작업: ${op?.type}`);
     current = outcome.source;

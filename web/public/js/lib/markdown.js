@@ -17,6 +17,9 @@
 //   2. 개발 서버의 편집 모드 (scripts/dev-edit.js). 편집 중에도 굵게와 제목을 보여 주는 highlight를 쓴다.
 //   3. 시험.
 
+// label 모드가 보여 주는 고정 글자.
+export const LINK_LABEL = "GitHub Repo";
+
 const HEADING = /^(#{1,3}) (.*)$/;
 const BULLET = /^- (.*)$/;
 // 글머리 기호가 되는 기호. 이모지와 흑백 기호 목록이다. 저작권 기호(©, ®, ™)는 글자 앞에 흔히 와서 뺀다.
@@ -79,6 +82,7 @@ function symbolNode(symbol) {
 
 // 글자를 노드 배열로 바꾼다. 제목 줄과 글머리 항목 줄은 블록 요소라서 앞뒤에 줄바꿈 글자를 넣지 않는다.
 export function renderMarkdown(text, mode) {
+  if (mode === "label") return [document.createTextNode(LINK_LABEL)];
   const lines = String(text).split("\n");
   const headings = lines.map((line) => (mode === "block" ? parseHeading(line) : null));
   const bullets = lines.map((line) => (mode === "block" ? parseBullet(line) : null));
@@ -134,6 +138,7 @@ function inlineEditNodes(line) {
 }
 
 export function highlightMarkdown(text, mode) {
+  if (mode === "label") return [document.createTextNode(text)];
   const lines = String(text).split("\n");
   const nodes = [];
   lines.forEach((line, index) => {

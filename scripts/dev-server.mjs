@@ -15,7 +15,7 @@
 //   배포 환경은 읽기 전용이므로 이 예외는 개발 서버에만 있다. 보안 장치는 아래 "편집 저장" 절에 있다.
 import http from "node:http";
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { readFileSync, renameSync, existsSync, statSync, watch, writeFileSync } from "node:fs";
+import { readFileSync, renameSync, existsSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -152,6 +152,8 @@ function send(response, status, headers, body) {
 // 3. 요청의 Origin이 이 서버의 주소와 같다. (다른 웹사이트가 보낸 요청을 거부한다.)
 // 4. 서버를 켤 때마다 새로 만드는 임시 암호(X-Dev-Token)가 같다. 암호는 같은 출처의 페이지만 받아 간다.
 // 5. 바꿀 수 있는 파일은 데이터 파일(main.js) 하나뿐이다. 경로는 요청이 정하지 않는다.
+//    예외로 사진 올리기(POST /__dev/edit/image)는 images 폴더에 webp 파일을 새로 만든다. 파일 이름은 서버가 정한다.
+//    (webp 표식 확인, 1.5MB 제한, 기존 파일을 덮어쓰지 않음)
 // 6. 작업은 set, insert, insertChild, move, delete만 허용한다. 번호나 이름표가 있는 항목(카드, 섹션)은 지우지 않는다. 요청 크기는 200KB까지이다.
 // 7. 저장할 때마다 파일의 이전 상태를 보관한다. "되돌리기"는 가장 최근 저장을 취소한다. (서버를 끄면 기록이 사라진다.)
 const editToken = randomBytes(24).toString("hex");
@@ -216,6 +218,53 @@ async function handleEdit(request, response) {
   }
 }
 
+// 카드 사진 올리기. 본문은 webp 파일 그대로이다. 쿼리 path는 카드 경로이다. (예: sections[id=s03-projects].cards[no=2])
+// 파일을 images 폴더에 새 이름으로 저장하고, 데이터 파일의 그 카드 image.src를 새 파일로 바꾼다.
+// 데이터 수정이 거절되면 방금 만든 파일을 지운다. 이전 사진 파일은 지우지 않는다.
+const IMAGE_MAX = 1500000;
+const imagesDir = join(dirname(dirname(dirname(editFile))), "images");
+
+async function handleImage(request, response, url) {
+  const chunks = [];
+  let size = 0;
+  let tooLarge = false;
+  request.on("data", (chunk) => {
+    size += chunk.length;
+    if (size > IMAGE_MAX) tooLarge = true;
+    else chunks.push(chunk);
+  });
+  await new Promise((done) => request.on("end", done));
+  const reply = (status, payload) => send(response, status, jsonHeaders, JSON.stringify(payload));
+  if (tooLarge) return reply(413, { ok: false, error: "사진이 너무 큼 (1.5MB 이하)" });
+  const body = Buffer.concat(chunks);
+  const cardPath = url.searchParams.get("path") ?? "";
+  let file = "";
+  try {
+    const { applyOps, CARD_PATH } = await loadEditCore();
+    if (!CARD_PATH.test(cardPath)) throw new Error("카드 경로가 아님");
+    const isWebp = body.length > 12 && body.toString("latin1", 0, 4) === "RIFF" && body.toString("latin1", 8, 12) === "WEBP";
+    if (!isWebp) throw new Error("webp 사진이 아님");
+    const no = /\[no=(\d+)\]$/.exec(cardPath)[1];
+    const name = `project-${no}-${Date.now()}.webp`;
+    file = join(imagesDir, name);
+    if (existsSync(file)) throw new Error("같은 이름의 파일이 이미 있음");
+    writeFileSync(file, body);
+    const source = readFileSync(editFile, "utf8");
+    const result = applyOps(source, [{ type: "setImage", path: cardPath, src: `/images/${name}` }]);
+    if (result.source !== source) {
+      writeData(result.source);
+      undoStack.push({ before: source, after: result.source });
+      if (undoStack.length > UNDO_MAX) undoStack.shift();
+    }
+    log("편집", `사진 저장 ${name} (${Math.round(body.length / 1024)}KB) -> ${cardPath}`);
+    return reply(200, { ok: true, src: `/images/${name}`, undo: undoStack.length });
+  } catch (error) {
+    if (file && existsSync(file)) unlinkSync(file);
+    log("편집", `사진 거절: ${error.message}`);
+    return reply(400, { ok: false, error: error.message });
+  }
+}
+
 function handleUndo(response) {
   const reply = (status, payload) => send(response, status, jsonHeaders, JSON.stringify(payload));
   const entry = undoStack[undoStack.length - 1];
@@ -252,6 +301,13 @@ async function handleEditRoute(path, request, response) {
   if (path === "/__dev/edit/token" && request.method === "GET") {
     if (request.headers["sec-fetch-site"] !== "same-origin") return send(response, 403, jsonHeaders, JSON.stringify({ ok: false }));
     return send(response, 200, jsonHeaders, JSON.stringify({ ok: true, token: editToken, undo: undoStack.length, file: relative(root, editFile).replaceAll("\\", "/") }));
+  }
+  if (path === "/__dev/edit/image" && request.method === "POST") {
+    if (!isSameOrigin(request) || !tokenMatches(request) || request.headers["content-type"] !== "image/webp") {
+      log("편집", "거부: 출처 또는 암호가 맞지 않음");
+      return send(response, 403, jsonHeaders, JSON.stringify({ ok: false, error: "허용되지 않은 요청" }));
+    }
+    return handleImage(request, response, new URL(request.url, `http://localhost:${port}`));
   }
   if ((path === "/__dev/edit" || path === "/__dev/edit/undo" || path === "/__dev/edit/undo-clear") && request.method === "POST") {
     if (!isSameOrigin(request) || !tokenMatches(request) || !String(request.headers["content-type"]).startsWith("application/json")) {

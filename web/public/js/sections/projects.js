@@ -3,7 +3,7 @@
 // 타일을 누르면 모달 창에 상세 내용이 나타난다.
 // 인쇄할 때는 CSS가 격자를 풀고 모든 상세를 펼쳐서 출력한다. (print.css)
 // 카드 항목: no, title, link, summary, body, image. title만 필수이다.
-// link는 하이퍼링크(새 탭)이다. linkText가 있으면 그 글자를 보여주고(예: "Github Repo"), 없으면 주소를 그대로 보여준다.
+// link는 하이퍼링크(새 탭)이다. 보이는 글자는 항상 "GitHub Repo"이다. linkText에 주소를 쓰면 그 주소로 연결한다.
 // 인쇄할 때는 CSS가 글자 뒤에 주소를 덧붙인다. (print.css)
 // 타일 순서: 사진, 제목, 링크, 요약. 링크는 제목 아래에 항상 보인다.
 // 모달 안에도 같은 링크가 있다. 인쇄할 때는 모달 내용이 펼쳐지므로 주소가 출력된다.
@@ -48,14 +48,19 @@ function createTitle(card, id, modal, p) {
 }
 
 // 링크를 만든다. 주소가 없으면 null을 반환한다.
-// editPath는 링크 글자(linkText)의 편집 경로이다. 글자 대신 주소가 보일 때는 편집하지 않는다.
+// 링크 글자는 무엇을 써도 "GitHub Repo"로 줄여 보인다. (md: "label", lib/markdown.js) 편집 중에는 쓴 글자가 그대로 보인다.
+// 링크 글자(linkText)가 주소(http로 시작)이면 그 주소로 연결한다. 아니면 link로 연결한다.
+// editPath는 링크 글자(linkText)의 편집 경로이다. linkText가 비어 있으면 편집하지 않는다.
 function createLink(url, text, id, editPath) {
-  if (!url) return null;
+  if (!url && !text) return null;
+  const href = /^https?:\/\//.test(text ?? "") ? text : url;
+  if (!href) return null;
   return el("a", {
     text: text || url,
     className: "gallery-link",
-    attrs: { href: url, target: "_blank", ...testAttr(id) },
+    attrs: { href, target: "_blank", ...testAttr(id) },
     edit: text ? editPath : undefined,
+    md: "label",
   });
 }
 
