@@ -87,6 +87,18 @@ export function watchToc(doc) {
       if (pair === current) pair.link.setAttribute("aria-current", "true");
       else pair.link.removeAttribute("aria-current");
     }
+    revealLink(current.link);
+  };
+
+  // 좁은 화면에서 목록이 좌우로 밀리는 경우, 현재 링크가 목록 가운데에 오도록 목록만 민다. (페이지는 움직이지 않는다.)
+  // 목록이 밀리지 않는 넓은 화면에서는 아무것도 하지 않는다.
+  const revealLink = (link) => {
+    const list = link.parentElement;
+    if (!list || list.scrollWidth <= list.clientWidth) return;
+    const linkBox = link.getBoundingClientRect();
+    const listBox = list.getBoundingClientRect();
+    const target = list.scrollLeft + (linkBox.left - listBox.left) - (list.clientWidth - linkBox.width) / 2;
+    list.scrollLeft = Math.max(0, Math.min(target, list.scrollWidth - list.clientWidth));
   };
 
   // 스크롤마다 계산하지 않고 화면 갱신에 한 번만 계산한다.

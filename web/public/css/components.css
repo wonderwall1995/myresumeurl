@@ -672,12 +672,24 @@ html {
   gap: var(--space-unit);
   padding: var(--space-unit) var(--space-side);
   background: var(--color-toc-panel);
+  /* 안쪽 목록이 길어도 바가 화면 폭보다 넓어지지 않게 한다. (넓어지면 페이지가 옆으로 밀려 바가 사라진다.) */
+  min-width: 0;
 }
 
-/* 링크 목록. 좁은 화면에서는 가로로 나열된다. */
+/* 링크 목록. 좁은 화면에서는 가로로 나열된다.
+   링크가 화면보다 길면 목록 안에서만 좌우로 민다. 페이지 전체는 옆으로 밀리지 않는다. 스크롤 막대는 숨긴다. */
 .toc-list {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   gap: var(--space-unit);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.toc-list::-webkit-scrollbar {
+  display: none;
 }
 
 /* 사이드바 위쪽(표시, 안내, 제목)과 아래쪽(인적 정보). 좁은 화면(위쪽 줄)에서는 숨긴다. */
@@ -783,9 +795,11 @@ html {
 
   /* 링크 목록. 선 없이 항목이 세로로 쌓인다. */
   .toc-list {
+    flex: 0 0 auto;
     flex-direction: column;
     gap: calc(var(--space-unit) / 2);
     margin-block-start: calc(var(--space-unit) * 2);
+    overflow: visible;
   }
 
   /* 이름은 인쇄 안내와 목차 제목 사이에 놓이고 왼쪽 정렬이다. */
