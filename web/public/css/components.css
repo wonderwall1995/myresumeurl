@@ -767,8 +767,27 @@ body:has(.modal[open]) {
   gap: var(--space-unit);
 }
 
+/* 닫기와 Save 버튼은 오른쪽 정렬이다. 크기는 방향 선택 버튼의 약 60%이고(폭 78px, 높이 27px), 배경색이 없다. (사용자 요청)
+   Save는 테두리를 2px로 해서 닫기와 구분한다. */
 .save-actions {
+  justify-content: flex-end;
   margin-block-start: calc(var(--space-unit) * 3);
+}
+
+.save-dialog .save-actions button {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 78px;
+  height: 27px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  line-height: 1;
+}
+
+.save-dialog .save-actions .save-submit {
+  border-width: 2px;
 }
 
 .save-dialog button {
@@ -788,8 +807,7 @@ body:has(.modal[open]) {
 }
 
 /* 고른 방향은 검정 바탕으로 구분한다. (흑백에서도 구분된다.) */
-.save-dialog .save-choice[aria-pressed="true"],
-.save-dialog .save-submit {
+.save-dialog .save-choice[aria-pressed="true"] {
   background: var(--color-text);
   color: var(--color-bg);
 }
