@@ -492,8 +492,8 @@
   // 이미 기호가 있으면 새 기호로 바꾸고, "지움"은 맨 앞 기호만 지운다. 바꾼 글자는 저장 전 변경이 되며 저장 막대에서 저장한다.
 
   // 선택한 항목에서 기호를 넣을 글자 요소를 찾는다. 서식(data-md)이 켜진 글자만 기호 마커가 되므로 그런 요소만 대상이다.
-  // label 모드(프로젝트 링크)는 줄 앞 기호가 없는 글자라 제외한다.
-  const MD_TEXT = '[data-edit][data-md]:not([data-md="label"])';
+  // label과 demo 모드(프로젝트 링크)는 줄 앞 기호가 없는 글자라 제외한다.
+  const MD_TEXT = '[data-edit][data-md]:not([data-md="label"]):not([data-md="demo"])';
   function textTarget(item) {
     if (item.matches?.(MD_TEXT)) return item;
     return item.querySelector?.(MD_TEXT) ?? null;

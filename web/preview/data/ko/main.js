@@ -8,7 +8,7 @@ export const mainPage = {
   sidebar: { name: "홍웅기" },
   toc: [
     { label: "인적사항", target: "s00-header" },
-    { label: "이력", target: "s02-career" },
+    { label: "이력", target: "s02-career-worklist-heading" },
     { label: "경력 기술", target: "s09-career-demo" },
     { label: "자기소개", target: "s01-intro" },
     { label: "프로젝트", target: "s03-projects" },
@@ -414,13 +414,14 @@ export const mainPage = {
           summary: "Cypress.io 팀 웹데모 대상\n자동화 테스트 구현 시연",
           link: "https://github.com/wonderwall1995",
           linkText: "https://github.com/wonderwall1995/cypress-realworld-for-portfolio",
-          image: { src: "/images/project-1.svg", alt: "결함 건수 추이를 나타낸 샘플 막대 그림" },
+          image: { src: "/images/project-1-1794702591101.webp", alt: "결함 건수 추이를 나타낸 샘플 막대 그림" },
           body: [
             "결함 등록 양식을 표준화하고 필수 항목(재현 절차, 기대 결과, 실제 결과, 환경)을 정함",
             "심각도와 우선순위 기준을 문서로 정리해 개발팀과 합의함",
             "주간 결함 리뷰 회의를 도입해 장기 미해결 건을 정리함",
             "결과: 재현 정보 누락으로 되돌아오는 결함이 눈에 띄게 줄었다. (샘플 문구)",
           ],
+          demo: "https://demo.hwk-resume.web.chickenkiller.com/",
         },
         {
           no: 2,
@@ -458,7 +459,7 @@ export const mainPage = {
           title: "DB Key tagger - DB 기반 LLM 맥락 문서 작성",
           summary: "DB 테이블 스냅샷 기반 DB 컬럼 대상 정보 색인\nDB Key 정보 작성, 문서화 및 LLM 맥락 문서 작성\nHermes Agent - Obsidian 환경 전송",
           link: "https://github.com/wonderwall1995",
-          linkText: "Github Repo",
+          linkText: "https://github.com/wonderwall1995/dbviewer-tagger",
           image: { src: "/images/project-1.svg", alt: "샘플 막대 그림" },
           body: ["지원 기기와 운영체제 조합을 표로 정리함", "조합별 필수 점검 시나리오를 정함"],
         },

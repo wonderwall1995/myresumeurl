@@ -33,7 +33,7 @@ const isEditMode = () => typeof document !== "undefined" && Boolean(document.doc
 // options.text: 글자. options.className: 클래스. options.attrs: 속성 객체.
 // children: 자식 노드 배열.
 export function el(tag, options = {}, children = []) {
-  const { text, className, attrs, edit, editItem, md } = options;
+  const { text, className, attrs, edit, editItem, md, placeholder } = options;
   const node = document.createElement(tag);
   if (text) {
     // md: 글자 속 굵게(**)와 제목(#)을 요소로 바꾼다. "inline"은 굵게만, "block"은 굵게와 제목이다. (lib/markdown.js)
@@ -52,6 +52,8 @@ export function el(tag, options = {}, children = []) {
   if (isEditMode()) {
     if (edit) setAttr(node, "data-edit", edit);
     if (md) setAttr(node, "data-md", md);
+    // placeholder: 글자가 비어 있을 때 편집 모드에서만 보이는 안내 글자. (scripts/dev-edit.css)
+    if (placeholder) setAttr(node, "data-placeholder", placeholder);
     if (editItem) setAttr(node, "data-edit-item", editItem);
   }
   // 새 창으로 여는 링크는 opener 연결을 끊는다.

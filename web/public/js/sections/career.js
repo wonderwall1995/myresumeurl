@@ -167,14 +167,16 @@ function renderFocus(root, data) {
 
 // Worklist 제목 (data.worklistHeading). 관심 분야 글(renderFocus) 바로 아래, 카드 앞에 한 번 나온다.
 // 섹션 제목(h2)과 같은 모양의 제목이다. (CSS가 섹션 바로 아래의 h2를 같은 모양으로 그린다.) 경력 섹션 안에 속한다.
-// 이름표는 <섹션>-worklist-heading 이다. 값이 비어 있으면 나오지 않는다.
+// 이름표(testid와 id)는 <섹션>-worklist-heading 이다. 값이 비어 있으면 나오지 않는다.
+// 이 제목이 목차 "이력" 항목의 대상이고, 인쇄에서 새 쪽의 시작이다. (목차 target: s02-career-worklist-heading)
+// 그 위의 섹션 제목(Skills)과 관심 분야(실행 분야, 관심 분야)는 목차 "인적사항" 구간에 속하고 첫 쪽(About me)에 이어서 인쇄된다.
 function renderWorklistHeading(root, data) {
   if (!data.worklistHeading) return;
   root.append(
     el("h2", {
       text: data.worklistHeading,
       className: "career-worklist-heading",
-      attrs: testAttr(partId(data.id, "worklist-heading")),
+      attrs: { id: partId(data.id, "worklist-heading"), ...testAttr(partId(data.id, "worklist-heading")) },
       edit: `${sectionPath(data.id)}.worklistHeading`,
     }),
   );

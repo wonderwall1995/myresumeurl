@@ -110,6 +110,18 @@
   display: none;
 }
 
+/* 비어 있는 칸(프로젝트의 배포 링크 등)은 편집 모드에서 안내 글자를 보여 눌러서 쓸 수 있게 한다. */
+.dev-edit-on [data-placeholder]:empty {
+  display: inline;
+}
+
+.dev-edit-on [data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #6b7280;
+  font-style: italic;
+  text-decoration: none;
+}
+
 .dev-edit-open {
   margin-block-start: 8px;
   padding: 4px 10px;

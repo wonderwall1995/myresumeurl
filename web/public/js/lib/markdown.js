@@ -12,6 +12,11 @@
 //   inline  굵게만 해석한다. 목록 항목, 요약, 바닥글 같은 한 줄 글자에 쓴다.
 //   block   굵게와 제목을 해석한다. 줄바꿈(\n)으로 여러 줄인 글자(소개, About, 본문)에 쓴다.
 //
+// 고정 글자 모드 (링크 글자를 쓴 내용과 상관없이 같게 보여 준다. 편집 중에는 쓴 글자(주소)가 그대로 보인다.)
+//   label   LINK_LABEL로 바꿔 보여 준다. 프로젝트의 저장소 링크에 쓴다.
+//   demo    DEMO_LABEL로 바꿔 보여 준다. 프로젝트의 배포 링크에 쓴다.
+//   두 모드 모두 글자가 비어 있으면 아무것도 보이지 않는다.
+//
 // 이 파일은 세 곳에서 쓴다.
 //   1. 화면 그리기 (lib/dom.js의 md 옵션). 빌드의 미리 그리기(JavaScript가 꺼진 화면)에도 같은 코드가 쓰인다.
 //   2. 개발 서버의 편집 모드 (scripts/dev-edit.js). 편집 중에도 굵게와 제목을 보여 주는 highlight를 쓴다.
@@ -19,6 +24,8 @@
 
 // label 모드가 보여 주는 고정 글자.
 export const LINK_LABEL = "GitHub Repo";
+export const DEMO_LABEL = "배포 링크";
+const FIXED_LABELS = { label: LINK_LABEL, demo: DEMO_LABEL };
 
 const HEADING = /^(#{1,3}) (.*)$/;
 const BULLET = /^- (.*)$/;
@@ -82,7 +89,7 @@ function symbolNode(symbol) {
 
 // 글자를 노드 배열로 바꾼다. 제목 줄과 글머리 항목 줄은 블록 요소라서 앞뒤에 줄바꿈 글자를 넣지 않는다.
 export function renderMarkdown(text, mode) {
-  if (mode === "label") return [document.createTextNode(LINK_LABEL)];
+  if (mode in FIXED_LABELS) return text ? [document.createTextNode(FIXED_LABELS[mode])] : [];
   const lines = String(text).split("\n");
   const headings = lines.map((line) => (mode === "block" ? parseHeading(line) : null));
   const bullets = lines.map((line) => (mode === "block" ? parseBullet(line) : null));
@@ -138,7 +145,7 @@ function inlineEditNodes(line) {
 }
 
 export function highlightMarkdown(text, mode) {
-  if (mode === "label") return [document.createTextNode(text)];
+  if (mode in FIXED_LABELS) return text ? [document.createTextNode(text)] : [];
   const lines = String(text).split("\n");
   const nodes = [];
   lines.forEach((line, index) => {

@@ -26,7 +26,9 @@ import { parse } from "acorn";
 
 export const PLACEHOLDER = "새 글자";
 // 새 항목을 만들 때 값을 복사하지 않는 속성. 주소와 사진은 사람이 정한다.
-const OMIT_KEYS = new Set(["id", "link", "linkText", "image", "target"]);
+const OMIT_KEYS = new Set(["id", "link", "linkText", "demo", "image", "target"]);
+// 값이 없을 때 set으로 새로 만들 수 있는 속성. (카드의 링크 칸. 편집 모드에서 빈 칸에 주소를 쓰면 만들어진다.)
+const CREATABLE_PROPS = new Set(["link", "linkText", "demo"]);
 const MAX_TEXT = 5000;
 const PARSE_OPTIONS = { ecmaVersion: "latest", sourceType: "module" };
 
@@ -188,8 +190,32 @@ function checkText(value) {
   if (/[\u0000-\u0009\u000b-\u001f\u007f]/.test(value)) throw new Error("허용되지 않는 제어 문자");
 }
 
+// 객체의 맨 끝에 속성 하나를 더한 새 소스를 만든다. 객체에 속성이 하나도 없으면 거절한다.
+function appendProp(source, objectNode, name, value) {
+  const last = objectNode.properties[objectNode.properties.length - 1];
+  if (!last) throw new Error("빈 객체에는 속성을 더하지 않음");
+  const text = withNewlines(`,
+${lineIndent(source, last.start)}${name}: ${JSON.stringify(value)}`, source);
+  return source.slice(0, last.end) + text + source.slice(last.end);
+}
+
+// 없는 속성(CREATABLE_PROPS)에 처음 값을 쓰는 set이면 속성을 만든다. 원래 값(old)은 빈 글자여야 한다.
+function createProp(source, op) {
+  const steps = parsePath(op.path);
+  const last = steps[steps.length - 1];
+  if (!last.prop || !CREATABLE_PROPS.has(last.prop) || steps.length < 2) return null;
+  const parentPath = op.path.slice(0, op.path.lastIndexOf("."));
+  const { node: parent } = resolve(pageOf(source), parentPath);
+  if (parent.type !== "ObjectExpression" || getProp(parent, last.prop)) return null;
+  if (op.old !== "") throw new Error(`파일의 값이 화면과 다름: ${op.path}`);
+  if (op.value === "") return { source };
+  return { source: appendProp(source, parent, last.prop, op.value) };
+}
+
 function opSet(source, op) {
   checkText(op.value);
+  const created = createProp(source, op);
+  if (created) return created;
   const { node } = resolve(pageOf(source), op.path);
   if (!isString(node)) throw new Error(`글자가 아닌 위치: ${op.path}`);
   if (node.value !== op.old) throw new Error(`파일의 값이 화면과 다름 (IDE에서 먼저 고쳤을 수 있음): ${op.path}`);
