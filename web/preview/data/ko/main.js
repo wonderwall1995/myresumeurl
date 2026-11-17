@@ -22,8 +22,8 @@ export const mainPage = {
     about: {
       heading: "About me…",
       text: [
-        "**저는…**\n동물병원 의료 차트(EMR) 기반 스타트업, 벳칭에서 2년 6개월을 근무한 홍웅기입니다.\n입사 초기 VOC, 이슈, 테스트 범주 대비 72%의 제품 품질 지표 정의 후 협업을 통해 92%로 향상시킨 재직 중 경험.\n개발 6개월이 소요된 메신저 프로젝트 릴리즈 이후, 이슈 및 VOC 대비 98%의 무결성을 달성한 성과.\n경쟁사 제품 마이그레이션 데이터 대상, 무결성 수치를 최초 67% 정의, 82%까지 협업하여 향상시킨 성과.\nQA Lead로 임명되어 2인 팀을 구성, 팀과 개인이 필요한 자동화 프로젝트 및 Agent의 구축 경험이 있습니다.",
-        "**업무 개요**\n- QA가 없던 40인 미만 스타트업에서 QA 0 to 1 프로세스 확립을 해본 경험이 있습니다.\n- 전문직 대상 EMR, CRM, ERP 의료 Web/App SaaS 제품에 대한 총괄 품질 책임을 담당했습니다.\n- Shift-left 기반의 QA 업무를 선호하여, PR 단위를 묶은 Iteration 개별로 제품 QA를 진행했습니다.\n- Lead로 발탁된 이후 1년 동안 2인 팀을 조직하여 운영한 경험이 있습니다.\n- 복약 지도 & 마약류 관리 프로세스와 같은 비즈니스 리스크를 야기할 기능의 품질 보증 경험이 있습니다.\n- Agent 도입 시 LLM이 참조할 업무 맥락의 기록, 프로젝트 간 오케스트레이션에 비중을 둡니다.\n- 정성적 QA 업무를 UI/UX 기반 정량적 평가로 치환하여 공유하는 일에 관심이 높습니다.\n- 극단적 시한의 프로젝트에서 비즈니스 리스크 및 기능별 Failsafe 범주에 대한 정의 후 릴리즈 경험이 있습니다.\n- 자율적인 업무에서 자동화 프로세스 빌드업을 위한 인프라 업무(TestID 색인 등)를 선호합니다.\n- LLM의 문서 생성 자동화에 앞서, 작성된 문서 평가의 자동화(TestGate)를 선호합니다.",
+        "**저는…**\n동물병원 의료 차트(EMR) 기반 스타트업, 벳칭에서 2년 6개월을 근무한 홍웅기입니다.\n입사 초기 VOC, 이슈, 테스트 범주 대비 72%로 측정된 품질 지표를 사내 협업을 통해 92%로 향상시켰습니다.\n개발 6개월이 소요된 스레드(타임라인) 프로젝트 릴리즈 이후, 이슈 및 VOC 대비 98%의 무결성을 달성한 성과.\n경쟁사 제품 마이그레이션 데이터 대상으로 무결성 수치를 최초 67% 정의, 협업하여 82%까지 향상시킨 성과.\nLead 임명 후 2인 팀을 구성, 팀과 개인이 필요한 자동화 프로젝트 및 Agent의 구축 경험이 있습니다.",
+        "**업무 개요**\n- QA가 없던 40인 미만 스타트업에서 QA 0 to 1 프로세스 확립을 해본 경험이 있습니다.\n- 의료 전문직 B2B 대상 EMR, CRM, ERP 솔루션에서 전체 제품에 대한 품질을 총괄했습니다.\n- Shift-left 기반의 QA 업무를 구축, Agile 방식의 프로젝트에서 PR을 묶은 Iteration 단위로 QA를 진행했습니다.\n- Lead로 발탁된 이후 1년 동안 2인 팀을 조직하여 운영한 경험이 있습니다.\n- 복약 지도 및 마약류 관리 프로세스와 같이 비즈니스 리스크가 있을 기능의 품질 보증 경험이 있습니다.\n- Agent 도입 시 LLM이 참조할 업무 맥락의 기록, 프로젝트 간 오케스트레이션에 비중을 둡니다.\n- 정성적 QA 업무를 UI/UX 기반 정량적 평가로 치환하여 공유하는 일에 관심이 높습니다.\n- 극단적 시한의 프로젝트에서 비즈니스 리스크 및 기능별 Failsafe 범주에 대한 정의를 내리며 릴리즈한 적이 있습니다.\n- 자율적인 업무에서 자동화 프로세스 빌드업을 위한 인프라 업무(TestID 색인 등)를 선호합니다.\n- LLM의 문서 생성 자동화에 앞서, 작성된 문서 평가의 자동화(TestGate)를 선호합니다.",
       ],
     },
   },
@@ -56,7 +56,7 @@ export const mainPage = {
           no: 1,
           company: "벳칭 (Vetching)",
           // 기업명 아래에 한 번 나오는 설명 (제품)
-          description: "**B2B 동물병원 EMR - CRM - ERP Web/App 차트**\n**(PlusVet · PlusVetM)**",
+          description: "**B2B 동물병원 EMR - CRM - ERP Web/App 차트**\n**(PlusVet & PlusVetM)**",
           // 직책이 바뀐 경력. 직책마다 묶음(소제목과 항목 목록)이 나온다.
           roles: [
             {
@@ -66,28 +66,28 @@ export const mainPage = {
                 {
                   label: "프로세스",
                   items: [
-                    "2인 QA 팀 구성 및 운영 (일일 스크럼, 인력 관리 및 평가)",
-                    "사내 타운홀 미팅 QA 자료 발표 및 부서 KPI · OKR 제시",
-                    "팀 내 사이드 프로젝트 명세 정의",
+                    "2인 QA 팀 구성 및 일일 스크럼 운영",
+                    "사내 타운홀 미팅 QA 자료 발표 및 부서 KPI OKR 제시",
+                    "팀 내 사이드 프로젝트 명세, Gluework 요구 정의",
                   ],
                 },
                 {
                   label: "프로젝트",
                   items: [
-                    "고객 병원 세무 · 회계 편의 목적 통계 산출 프로젝트",
+                    "고객 병원 세무, 회계 편의 목적 통계 산출 프로젝트",
                     "대형 병원 분점 그룹화 기획, UI - DB 간 데이터 정합성 검증",
-                    "스레드 - 환축 · 차트 업무 알림 타임라인 프로젝트 품질 책임",
+                    "스레드 - 원내 업무 기록 및 알림 타임라인 프로젝트 품질 책임",
                     "Mobile 펜 차트 프로젝트 사용성 및 기기 호환 검증",
-                    "AI 레코드 - 진료 발화 STT · 차트 내 LLM 요약 자동화 프로젝트",
+                    "AI 레코드 - 진료 발화 STT 기록 & 차트 내 LLM 요약 기입 프로젝트",
                   ],
                 },
                 {
                   label: "부서 내부 프로젝트",
                   items: [
                     "AST 자동화 코드 기반 testId 색인 서비스 배포",
-                    "Hermes Agent 기반 팀 업무 보고 자동화 · 프로젝트 오케스트레이션 초기 구축",
+                    "Hermes Agent 기반 팀 업무 보고 자동화, 프로젝트 오케스트레이션 초기 구축",
                     "DB Key Tagger - DB 컬럼 CSV Parser, LLM 맥락 문서 작성 프로젝트 기획",
-                    "Context docs & PR Diff 기반 테스트 결과 평가 서비스 TestGate 기획 및 배포",
+                    "Context docs & PR Diff 기반 테스트 결과 평가 서비스 TestGate 기획 및 구현",
                   ],
                 },
               ],
@@ -98,35 +98,35 @@ export const mainPage = {
               groups: [
                 {
                   label: "프로세스",
-                  items: ["Context Driven - Shift-Left QA 업무 프로세스 확립", "비즈니스 리스크 기반 기획 검수", "제품 품질 지표 정의 및 계측 문서 C 레벨 보고", "제품별 테스트 케이스 · 시나리오 작성", "App/Web 제품 릴리즈 책임", "제품 본부 입사자 대상 제품 OJT 책임"],
+                  items: ["Context Driven - Shift-Left QA 업무 프로세스 확립", "비즈니스 리스크 기반 기획 검수", "제품 품질 지표 정의 및 계측 문서 C 레벨 보고", "제품별 테스트 케이스 & 시나리오 작성", "App/Web 제품 릴리즈 책임", "제품 본부 입사자 대상 제품 OJT 책임"],
                 },
                 {
                   label: "프로젝트",
                   items: [
                     "수의사 및 환자 스케줄링 관리 시스템",
-                    "Naver 예약 · LG AICC 콜센터 스케줄링 연동 검증",
-                    "통원 · 입원 의무 차트 사용성 검증",
-                    "원내 약물 조제 및 처방 산술 프로세스",
+                    "Naver 예약 & LG AICC 콜센터 스케줄링 연동 검증",
+                    "통원 입원 의무 차트 사용성 검증",
+                    "원내 약물 조제 및 처방 약제 프로세스",
                     "고객 및 환자 연락 관리(CRM) 프로세스",
-                    "원내 그룹 채팅 · DM 메신저 시스템",
+                    "원내 그룹 채팅 & DM 메신저 시스템",
                     "리셉션 수납 및 결제 시스템 개선",
                     "약물 재고 및 처방 관리(ERP) 시스템",
-                    "NIMS 연동 마약류 구매 · 투약 · 폐기 프로세스 유지보수",
+                    "NIMS 연동 마약류 구매, 투약, 폐기 프로세스 검수",
                     "서드파티 영상 및 검진 장비 연동 검증",
-                    "예약자 대기 현황 표기 웹 프로젝트 · 태블릿 자동 접수 앱 시스템 검증",
+                    "예약자 대기 현황 표기 웹 프로젝트, 태블릿 자동 접수 앱 시스템 검증",
                   ],
                 },
                 {
                   label: "사업 영역",
-                  items: ["거래처 · 대학 병원 대상 경쟁 제품 마이그레이션 데이터(CSV) 무결성 검증 책임"],
+                  items: ["거래처 및 대학 병원 대상 경쟁 제품 마이그레이션 데이터(CSV) 무결성 검증 책임"],
                 },
                 {
                   label: "부서 내부 프로젝트",
                   items: [
                     "TypeScript UI/UX 코드 내 testId 색인 작업",
-                    "Web - App 양방향 자동화 시나리오 구축 (Prisma · PostgreSQL)",
-                    "Jenkins 트리거 & GitHub Webhook 기반 Slack Bot 업무 · 이슈 알림 일원화",
-                    "서버 라우트 기반 테스트 체크리스트 리뷰 서비스 배포",
+                    "Web - App 양방향 자동화 시나리오 구축 (Prisma & PostgreSQL)",
+                    "Jenkins 트리거 & GitHub Webhook 기반 Slack Bot 업무 - 이슈 알림 일원화",
+                    "EC2 라우팅 기반 Test Checklist 생성 자동화 서비스 기획 및 배포",
                   ],
                 },
                 {
@@ -149,21 +149,21 @@ export const mainPage = {
         {
           no: 1,
           company: "벳칭 (Vetching)",
-          description: "**B2B 동물병원 EMR - CRM - ERP Web/App 차트**\n**(PlusVet · PlusVetM)**",
+          description: "**B2B 동물병원 EMR - CRM - ERP Web/App 차트**\n**(PlusVet & PlusVetM)**",
           roles: [
             {
               role: "QA 프로젝트",
               period: "2026.06 - 2026.08\nQA Lead",
               groups: [
                 {
-                  label: "Context docs & PR Diff 기반 테스트 결과 평가 서비스 TestGate 기획 및 배포",
+                  label: "Context docs & PR Diff 기반 테스트 결과 평가 서비스 TestGate 기획 및 구현",
                   items: [
                     {
                       text: "Test Checklist 자동 생성 프로젝트의 품질 개선",
                       sub: ["▸ 도메인 Context Enrichment docs(Json)를 참조 데이터로 투입\n"],
                     },
                     {
-                      text: "QA가 작성한 테스트 결과에 대한 Supervisor 관 평가 요청 기획",
+                      text: "QA가 작성한 테스트 결과에 대한 LLM 평가 프로세스 기획",
                       sub: ["▸ PR Comment로 제출한 테스트 보고서의 Test Coverage 영역 충족 여부 피드백\n"],
                     },
                     {
@@ -179,19 +179,19 @@ export const mainPage = {
               period: "2026.06 - 2026.07\nQA Lead",
               groups: [
                 {
-                  label: "AI 레코드 - 진료 발화 STT · 차트 내 LLM 요약 자동화 프로젝트",
+                  label: "AI 레코드 - 진료 발화 STT 기록 & 차트 내 LLM 요약 기입 프로젝트",
                   items: [
                     {
                       text: "진료실 내 발화 음성 녹음 품질 검증",
-                      sub: ["▸ 3인 이상 발화 상황 중 STT 식별상 녹음 품질 · 인물 구분 여부 확인", "▸ 발화자 거리, 마이크 볼륨별 거리감 테스트, 마이크 증폭 필요 여부 판단"],
+                      sub: ["▸ 3인 이상 발화 상황 중 STT 식별상 녹음 품질, 인물 구분 여부 확인", "▸ 발화자 거리, 마이크 볼륨별 거리감 테스트, 마이크 증폭 필요 여부 판단"],
                     },
                     {
                       text: "LLM 요약 내 필터링 프롬프트 검증",
-                      sub: ["▸ 맥락 외 발언 · 진료 외 내용의 차트 수록 중 필터링 프롬프트 정상 작동 여부 확인"],
+                      sub: ["▸ 맥락 외 발언 및 진료 외 내용의 차트 수록 중 필터링 프롬프트 정상 작동 여부 확인"],
                     },
                     {
                       text: "기능 대상 기획 명세 기반 새너티 테스트 진행",
-                      sub: ["▸ 녹음 · 요약 기능 전반 작동 여부 테스트"],
+                      sub: ["▸ 녹음 및 요약 기능 전반 작동 여부 테스트"],
                     },
                   ],
                 },
@@ -202,15 +202,15 @@ export const mainPage = {
               period: "2026.05 - 2026.08\nQA Lead",
               groups: [
                 {
-                  label: "Hermes Agent 기반 팀 업무 보고 자동화 · 프로젝트 오케스트레이션 초기 구축",
+                  label: "Hermes Agent 기반 팀 업무 보고 자동화, 프로젝트 오케스트레이션 초기 구축",
                   items: [
                     {
-                      text: "① Slack bot 연동, Team 업무 보고 · 스크럼 공유 자동화 구현",
-                      sub: ["▸ Jenkins가 생성하는 개별 스크럼 공유 채널 내 작성된 내용에 대한 요약 및 작성 자동화", "⇒ 작성 공수 감소 / 월간 · 주간 품질 보고서 및 부서 내 업무 보고서 생성 효율 증가"],
+                      text: "① Slack bot 연동, Team 업무 보고 & 스크럼 공유 자동화 구현",
+                      sub: ["▸ Jenkins가 생성하는 개별 스크럼 공유 채널 내 작성된 내용에 대한 요약 및 작성 자동화", "⇒ 작성 공수 감소 / 월간, 주간 품질 보고서 및 부서 내 업무 보고서 생성 효율 증가"],
                     },
                     {
-                      text: "② Test Checklist 생성 자동화 프로세스의 Hermes Agent Hook 이관",
-                      sub: ["▸ 개별 PR의 Diff 전체 & Commit Diff 대상 Test Checklist 생성 프로세스의 Hermes Agent 이관", "▸ PR 대상 Test Checklist 생성 프로세스의 CLI 수동 호출 방식에서의 번거로움 확인", "⇒ Slack Bot 노티 발 Agent 분석 세션 생성 요청 및 해석 진행으로의 전환"],
+                      text: "② Test Checklist 생성 자동화 프로세스의 Hermes Agent Hook 연동",
+                      sub: ["▸ 개별 PR의 Diff 전체 & Commit Diff 대상 Test Checklist 생성 자동화의 Hermes Agent 연동", "▸ PR 대상 Test Checklist 생성 프로세스의 CLI 수동 호출 방식에서의 번거로움 확인", "⇒ Slack Bot 노티 발 Agent 분석 세션 생성 요청 및 해석 진행으로의 전환"],
                     },
                   ],
                 },
@@ -225,11 +225,11 @@ export const mainPage = {
                   items: [
                     {
                       text: "제품 본부 내 RAG 구축의 기반 문서 생성 필요성 확인",
-                      sub: ["▸ 도메인 단어에 대한 제품 및 개발 본부 구성원 간 지식 공유 및 하네스 내 학습 체계 필요 확인", "▸ 부서 차원 **자동화 업무에서 '맥락 문서'의 부재로 인한 결과물 품질 저조** 지속 발견"],
+                      sub: ["▸ 도메인 단어에 대한 제품 및 개발 본부 구성원 간 지식 공유 및 LLM 참조 자료 필요 상황 확인", "▸ 부서 차원 **자동화 업무에서 '맥락 문서'의 부재로 인한 결과물 품질 저조** 지속 발견"],
                     },
                     {
                       text: "DB Viewer Interface 레퍼런스 기능 - 테이블별 DB View & 스냅샷 기능 구현",
-                      sub: ["▸ SSH 터널 방식 연결, 타입 행 인코딩 및 Parsing된 문서(CSV)를 Datagrid 기반으로 표기하도록 설계"],
+                      sub: ["▸ SSH 터널 방식 연결, DB 대상 스냅샷 문서(CSV)를 Datagrid 기반으로 표기하도록 설계"],
                     },
                     {
                       text: "DB Column Tagging 기능 - 키 종속성에 따른 공통 Key, 개별 Key 대상 Json 기반 문서 작성 기능 구현",
@@ -237,7 +237,7 @@ export const mainPage = {
                     },
                     {
                       text: "LLM 대상 Context Enrichment Docs의 작성 환경 구성 & Index 기능 구현",
-                      sub: ["▸ Key 단위 Json 산출물은 Key 이름으로 통칭, Obsidian Vault 내 저장 구조 설계", "▸ Hermes Agent 세션이 작업 시점에 Vault 문서를 검색 · 참조하는 외부 지식 저장소 구성", "⇒ DB Key Tagger 내 기록된 문서의 **Hermes - Obsidian 환경 내 맥락 문서 전송 · 업데이트 기능** 구현"],
+                      sub: ["▸ Key 단위 Json 산출물은 Key 이름으로 통칭, Obsidian Vault 내 저장 구조 설계", "▸ Hermes Agent 세션이 작업 시점에 Vault 문서를 검색 - 참조하는 외부 지식 저장소 구성", "⇒ DB Key Tagger 내 기록된 문서의 **Hermes - Obsidian 환경 내 맥락 문서 전송 및 업데이트 기능** 구현"],
                     },
                   ],
                 },
@@ -248,15 +248,15 @@ export const mainPage = {
               period: "2026.03 - 2026.05\nQA Lead",
               groups: [
                 {
-                  label: "스레드 - 환축 · 차트 업무 알림 타임라인 프로젝트",
+                  label: "스레드 - 원내 업무 기록 및 알림 타임라인 프로젝트",
                   items: [
                     {
                       text: "6개월간의 개발 기간 종료, 10일 QA 기간 중 팀 내 업무 조율 및 계획",
-                      sub: ["▸ 원내 발생할 수 있는 User Event 시나리오상 Notification의 코드 반영 여부 정합성 검증 우선", "▸ UI/UX상 Subscription 및 정규화 구조 DB 대상 QA 검증 시나리오 작성", "⇒ **개발 본부 내 Pair 테스트**를 위한 테스트 시나리오 작성, API 코드 검증 요청 및 탐색적 테스팅 기조 교육"],
+                      sub: ["▸ 원내 발생할 수 있는 User Event 시나리오상 Notification의 코드 반영 여부 정합성 우선 검증", "▸ UI/UX상 Subscription 및 정규화 구조 DB 대상 QA 검증 시나리오 작성", "⇒ **개발팀과의 Pair 테스트**를 위한 테스트 시나리오 작성, API 코드 검증 요청 및 탐색적 테스팅 방법 교육"],
                     },
                     {
                       text: "병원 환자 대상 발생하는 스레드(타임라인) 내 CRUD 동작에 따른 회귀 테스트",
-                      sub: ["▸ Event Listener 코드의 전체 리스트업 이후 개별 동작에 따른 회귀 테스트 진행", "⇒ 129개 이슈 산출 및 리포트에 따른 **릴리즈 전** Fix", "⇒ **릴리즈 후** 2개의 Minor 이슈 검출, 스레드 품질 보증 업무 성과에 따른 6일 포상 휴가 수여"],
+                      sub: ["▸ Event Listener 코드의 전체 리스트업 이후 개별 동작에 따른 회귀 테스트 진행", "⇒ 129개 이슈 산출 및 리포트에 따른 **릴리즈 전** Fix", "⇒ **릴리즈 후** 사전 이슈 탐지 대비 98% 무결성 달성, 업무 성과에 따른 6일 포상 휴가 수여"],
                     },
                     {
                       text: "메신저 기능의 스레드 프로젝트 내부 병합에 따른 원내 메시지 전송에 대한 통합 테스트",
@@ -275,15 +275,15 @@ export const mainPage = {
                   items: [
                     {
                       text: "실시간 조제 프로젝트 진행 전 기획 리뷰를 위한 현장 답사",
-                      sub: ["▸ 역곡역 XX 동물병원 협조, **진료실 조제실 환경 분리에 따른 병원 업무 맥락이 끊기는 케이스 현장 탐사**", "⇒ 1인 병원 or 대형 병원 대상 개별 케이스 사용성 분석 및 편의성 측면 시나리오 작성"],
+                      sub: ["▸ 역곡역 XXX 동물병원 협조, **진료실 조제실 환경 분리에 따른 병원 업무 맥락이 끊기는 케이스 현장 답사**", "⇒ 1인 병원 or 대형 병원 대상 개별 케이스 사용성 분석 및 편의성 측면 시나리오 작성"],
                     },
                     {
                       text: "실시간 조제 상태에 따른 원내 차트 사용자별 시나리오 테스트",
-                      sub: ["▸ App - PC 양방향 Subscription 여부 확인, Push 알림, 실시간 Notification 검증", "▸ 수술 & 시술 중 마약류의 약제 처방 관련 비니스 리스크 여부 검증"],
+                      sub: ["▸ App - PC간 정보 Subscription 여부 확인, Push 알림, 실시간 Notification 검증", "▸ 수술 & 시술 중 마약류 처방 관련 비즈니스 리스크 여부 검증"],
                     },
                     {
-                      text: "처방전 내 제형(Rx) 산술식 대상 비즈니스 리스크 여부 검증",
-                      sub: ["▸ 진료 차트 Datagrid 내 약제 제형별 산출 계산 회귀 테스트 진행"],
+                      text: "처방전(Rx) 내 제형 산술식 대상 비즈니스 리스크 여부 검증",
+                      sub: ["▸ 진료 차트 Datagrid 내 환자 대상 약제 제형별 계산 회귀 테스트 진행"],
                     },
                   ],
                 },
@@ -294,7 +294,7 @@ export const mainPage = {
               period: "2025.02 - 2025.05\nQA Manager",
               groups: [
                 {
-                  label: "AWS EC2 라우팅 기반 Test Checklist 생성 자동화 프로젝트 기획 및 배포",
+                  label: "EC2 라우팅 기반 Test Checklist 생성 자동화 서비스 기획 및 배포",
                   items: [
                     {
                       text: "Input 문서 토큰 핸들링 목적, Parser & Chunking 자동화 코드 작성",
@@ -306,7 +306,7 @@ export const mainPage = {
                     },
                     {
                       text: "◆ **Problem**",
-                      sub: ["▸ PR Diff 문서의 Parsing & Chunk 화 이후 문서의 품질 결과 저하 확인", "▸ 도메인 Context Enrichment Docs의 필요성 확인 - 자동 생성 문서의 맥락 손실 발견", "⇒ QA 프로젝트 결과물의 가치 하향 / 향후 발전된 신규 프로젝트의 인사이트 발견 **(TestGate)**"],
+                      sub: ["▸ PR Diff 문서의 Chunk화 이후 병합된 문서의 품질 저하 확인", "▸ 도메인 Context Enrichment Docs의 필요성 확인 - **자동 생성 문서의 맥락 손실 발견**", "⇒ 자동화 문서 결과 가치 하향 평가 / 향후 발전된 신규 프로젝트의 인사이트 발견 **(TestGate)**"],
                     },
                   ],
                 },
@@ -337,11 +337,11 @@ export const mainPage = {
             },
             {
               role: "QA 프로젝트",
-              period: "2024.12 - 2025.02\nQA Manager",
+              period: "2024.12 - 2025.02\n후속 작업 26.01\nQA Manager",
               groups: [
                 {
                   label: "TypeScript UI/UX 코드 내 testId 색인 작업",
-                  items: [{ text: "Tailwind CSS 기반 React VUI (Repo) 내 개별 UI 대상 data-testid 색인 작업", sub: ["▸ React & Flutter 기반 제품의 렌더링 구조상 테스트 대상 UI의 고정적 식별자 부재 원인 식별", "⇒ Tailwind 구조로 사내 배포중인 React VUI (Repo) 대상 data-testid 색인 작업 시작"] }, { text: "약제 처방 및 제조에 필요한 산술 테스트 코드 시험 도입", sub: ["▸ 기능 추가에 따른 xPath 사용에서 testid 사용 전환", "⇒ UI/UX 기반 **테스트 코드의 유지보수 공수 감소**"] }, { text: "◆ Problem", sub: ["▸ React VUI 내 data-testid 색인 작업에 대한 **버저닝 꼬임 우려로 제품 본부 내 작업 중단 요청 발생**", "✓ VUI Repo 외, 자사 제품 Repo 자체 data-testid 색인 자동화 코드 (AST) 필요성 확인", "⇒ C레벨이 제공한 data-testid 색인 AST 자동화 코드 기반, 색인 후 LLM 보정 하네스 구현 (26.01)"] }],
+                  items: [{ text: "Tailwind CSS 기반 사내 디자인 Repo (React VUI) 내 개별 UI 대상 data-testid 색인 작업", sub: ["▸ React & Flutter 기반 제품의 렌더링 구조상 테스트 대상 UI의 고정적 식별자 부재 원인 식별", "⇒ Tailwind 구조로 사내 배포중인 사내 디자인 Repo 대상 data-testid 색인 작업 시작"] }, { text: "약제 처방 및 조제에 필요한 산술 테스트 코드 시험 도입", sub: ["▸ 기능 추가에 따른 xPath 사용에서 testid 사용 전환", "⇒ UI/UX 기반 **Playwright 테스트 코드의 유지보수 공수 감소**"] }, { text: "◆ Problem", sub: ["▸ 사내 디자인 Repo 내 data-testid 색인 작업 완료 후 **버저닝 꼬임 우려로 제품 본부 내 작업 중단 요청 발생**", "✓ 사내 디자인 Repo 외, 자사 제품 Repo 자체 data-testid 색인 자동화 코드 (AST) 필요성 확인", "⇒ data-testid 색인 AST 자동화 코드 기반, 색인 후 LLM 보정 하네스 구현 (26.01)"] }],
                 },
               ],
             },
@@ -351,7 +351,7 @@ export const mainPage = {
               groups: [
                 {
                   label: "Web - App 양방향 자동화 시나리오 구축 (Prisma · PostgreSQL)",
-                  items: [{ text: "DB 내 테이블 대상 가변적 데이터 / 고정적 데이터 컬럼별 성격 정의", sub: ["▸ 자동화 테스트 계획 중 User (수의사) 또는 병원 설정에 종속되는 상대적 독립 데이터 리스트업", "▸ 환자 관련 데이터상 id, name, number 와 같은 수시 변경 데이터의 여타 테이블 강한 종속성 기록"] }, { text: "환자 처방 제조에 필요한 방정식 산술 및 CRUD 관련 기능 자동화 코드 작성", sub: ["▸ 12자리 난수 생성 로직 도입, 개별 약제 계산 UI인 Datagrid Cell 자동화 테스트 계획", "⇒ Playwright 병렬 실행 테스트 코드 사용, **약제 관련 비즈니스 리스크 유발 로직에서의 품질 안정성 확보**"] }, { text: "AWS EC2 인스턴스 내 QA Test DB 구축 - Prisma · PostgreSQL 연동", sub: ["▸ Web App 간 동일 Fixtures를 QA 부서 측 PostgreSQL DB - Prisma 사용", "⇒ 테스트 기록에 따른 난수의 Datagrid Cell 약제 산술식 성공 조건, 성공 여부 DB상 업로드 및 공유 성공"] }, { text: "◆ Problem", sub: ["✓  다수 UI가 Tailwind로 렌더링 된 상태, xPath 의존성이 높아 **Path 정합성이 쉽게 잃는 문제 확인**", "✓  개별 생성된 **난수의 저장 및 저장 기록에 종속된 테스트 성공 여부 기록** 공유가 모호한 상황 확인", "⇒ Datagrid Cell 약제 산술식 성공 조건, 성공 여부 DB 상 업로드 및 공유 구현", "⇒ 자사 제품 내 PC & MO 환경 대상 testId 및 ValueKey 색인 작업 계획"] }],
+                  items: [{ text: "DB 내 테이블 대상 가변적 데이터 / 고정적 데이터 컬럼별 성격 정의", sub: ["▸ 자동화 테스트 계획 중 User (수의사) 또는 병원 설정에 종속되는 **상대적 독립 데이터** 리스트업", "▸ 환자 관련 데이터상 date, name, number 와 같은 **수시 작성 데이터**의 여타 테이블 종속성 리스트업"] }, { text: "환자 처방 조제에 필요한 방정식 산술 및 CRUD 관련 기능 자동화 코드 작성", sub: ["▸ 12자리 난수 생성 로직 도입, 개별 약제 계산 UI인 Datagrid Cell 자동화 테스트 계획", "⇒ Playwright 병렬 실행 테스트 코드 사용, **약제 관련 비즈니스 리스크 유발 로직에서의 품질 안정성 확보**"] }, { text: "AWS EC2 인스턴스 내 QA Test DB 구축 - Prisma · PostgreSQL 연동", sub: ["▸ Web App 간 동일 Fixtures를 QA 부서 측 PostgreSQL DB - Prisma 사용", "⇒ 테스트 기록에 따른 난수의 Datagrid Cell 약제 산술식 정합성 계측 환경 구현"] }, { text: "◆ Problem", sub: ["✓  다수 UI가 Tailwind로 렌더링 된 상태, xPath 의존성이 높아 **Path 정합성을 잃는 문제 확인**", "✓  개별 생성된 **난수의 저장 및 저장 기록에 종속된 테스트 성공 여부 기록** 공유가 모호한 상황 확인", "⇒ Datagrid Cell 약제 산술식 성공 조건, 성공 여부 DB 상 업로드 및 공유 구현", "⇒ 자사 제품 내 PC & MO 환경 대상 testId 및 ValueKey 색인 작업 계획"] }],
                 },
               ],
             },
@@ -361,7 +361,7 @@ export const mainPage = {
               groups: [
                 {
                   label: "Jenkins - Github Webhook 기반 Slack Bot 연동 이슈 리포팅",
-                  items: [{ text: "사내 Github 도구 일원화 요청 - Github Project의 BTS 채택", sub: ["▸ Google 스프레드 시트 기반, 이슈 리포트 도구의 개발 본부 내 사용 어려움 확인.", "⇒ **Github Project 대상 BTS 구축** - 기능 대상 이슈 그룹 정의 / **주차별 Slackbot 알림 Cronjob 구축**"] }, { text: "이슈 그룹화 노티 - 주차별 이슈 & Major 이슈 리스트업 Cronjob", sub: ["▸ BTS상 이슈를 기능별 엮어 수요일마다 Slack 채널 내 Jenkins 파이프라인 연동을 통해 공시.\n", "⇒  기획 확인이 필요하거나 Failsafe 기준을 충족하는 UI상, **17건의 Major 이슈 감소.**"] }, { text: "Github Webhook 연동 (1) - 경쟁사 제품 마이그레이션 팀 대상 이슈 노티 알림", sub: ["▸ 사업부 & 마이그레이션 팀에서 사전 비즈니스 리스크 파악, 이슈 리포트에 대한 Github Issues 문서 접근 불가한 점 확인", "⇒ Github **Issue의 Json 문서화, 전사 대상 Slack Bot 정보 공유 파이프라인** 구현"] }, { text: "Github Webhook 연동 (2) - QA 부서 측 테스트 업무 티켓 알림", sub: ["▸ PR 혹은 Iteration PR 대상, Reviewer의 QA 등록시 QA 측 업무 요청 알림 구현"] }, { text: "중복 알림 및 에지 케이스 처리", sub: ["⇒ 개별 노티 대상 Jenkins Json 저장 후 덮어쓰기, 신규 생성 대상 추적 파이프라인 구현", "⇒ Slack Bot의 특정 채널 메시지, 쓰레드 ID, 개별 TimeStamp 추적 파이프라인 구현"] }],
+                  items: [{ text: "사내 Github 도구 일원화 요청 - Github Project의 BTS 채택", sub: ["▸ Google 스프레드 시트 기반, 이슈 리포트 도구의 개발 본부 내 사용 어려움 확인.", "⇒ **Github Project 대상 BTS 구축** - 기능 대상 이슈 그룹 정의 / **주차별 Slack Bot 알림 Cronjob 구축**"] }, { text: "이슈 그룹화 노티 - 주차별 이슈 & Major 이슈 리스트업 Cronjob", sub: ["▸ BTS상 이슈를 기능별 엮어 수요일마다 Slack 채널 내 Jenkins 파이프라인 연동을 통해 공유.\n", "⇒  기획 확인이 필요하거나 Failsafe 기준을 충족하는 UI상, **입사 전 존재하던 17건 Major 이슈 감소.**"] }, { text: "Github Webhook 연동 (1) - 경쟁사 제품 마이그레이션 팀 대상 이슈 노티 알림", sub: ["▸ 사업부의 이슈 리포트 측 Github Issues 문서 접근 불가, 비즈니스 리스크 파악 불가한 점 확인", "⇒ Github **Issue의 Json 문서화, 전사 대상 Slack Bot 정보 공유 파이프라인** 구현"] }, { text: "Github Webhook 연동 (2) - QA 부서 측 테스트 업무 티켓 알림", sub: ["▸ PR 혹은 Iteration PR 대상, Reviewer의 QA 등록시 QA 측 업무 요청 알림 구현"] }, { text: "중복 알림 및 에지 케이스 처리", sub: ["⇒ 개별 노티 대상 Jenkins Json 저장 후 덮어쓰기, 신규 생성 대상 추적 파이프라인 구현", "⇒ Slack Bot의 특정 채널 메시지, 쓰레드 ID, 개별 TimeStamp 추적 파이프라인 구현"] }],
                 },
               ],
             },
@@ -370,8 +370,8 @@ export const mainPage = {
               period: "2024.03 - 2024.10\nQA Manager",
               groups: [
                 {
-                  label: "CRM - 스케줄링 기능 일원화 · 고도화 프로젝트 (네이버 예약 & LG AICC 콜센터 연동)",
-                  items: [{ text: "① 스케줄링 일원화 - 네이버 예약 & LG AICC 콜센터 연동 검증", sub: ["▸ Mobile App, PC 제품 간 호환성을 위해 존재하는 Cross 플랫폼 제품 기능 확대 - QA 범주 확장\n", "▸ 약 320 TestCase 작성, 스케줄링 기능에 대한 E2E UI/UX 테스트 진행", "※  **릴리즈 전** API 서버 코드 품질 자체 저하로 성능적 이슈 다수 발생", "⇒ 환자 보호자 인입 유발될 **비즈니스 리스크 이슈 우선**하여, 이슈별 중요도 판단 보고서 작성", "⇒ Major 이슈 대상 **영상 자막 삽입 및 배속 편집 이용**하여 제품 본부 내 이슈 리스트업"] }, { text: "② 보호자 FollowUp - 진료 후 스케줄러 내 환자 가예약 서비스", sub: ["▸ 디자인 부재 속 개발 의도 및 FollowUp 기능의 가예약 특징을 일반 스케줄링 대비 맥락적으로 파악", "▸ TestCase 또는 TestScenario 부재 상황 Boolean 위주의 DB 컬럼 값들에 대한 UI 정합성 검증 필요", "⇒  탐색적 테스팅, 개발 / QA 동시에 병행하는 페어 프로젝트 진행", "※ **리스크 발생 하루 전** 스케줄링 테이블 경계값 분석, DB 내 마이그레이션된 Date 경계값 오차 범위 리포트"] }, { text: "릴리즈 조건 개념 사내 확립", sub: ["✓ 기능 자체 문제에선 대체 가능한 기능이 있는지? UI Path 문제에선 대체 가능한 경로가 있는지?", "✓  자사 제품 개별 이슈 중요도를 측정할 때, 그 기준으로써 비즈니스 리스크를 야기하는 경우는 무엇인지?", "✓  상정하지 않은 프로젝트에서 필요한 테스트 기법, 개발자와 페어로 커뮤니케이션은 어떻게 진행하는지?"] }],
+                  label: "CRM - 스케줄링 기능 일원화 · 고도화 프로젝트 (Naver 예약 & LG AICC 콜센터 연동)",
+                  items: [{ text: "① 스케줄링 일원화 - Naver 예약 & LG AICC 콜센터 연동 검증", sub: ["▸ Naver 예약 & LG AICC 외부 스케줄 등록 프로세스 구축 협업 중 자사 품질 책임\n", "▸ 약 320 TestCase 작성, 스케줄링 호환을 위한 자사 제품 전체 E2E UI/UX 테스트 진행", "※  **릴리즈 전** 코드 품질에 따른 비기능적 이슈 다수 발생", "⇒ **비즈니스 리스크로 판단될 결함 포함**, 이슈별 심각도 판단 보고서 작성", "⇒ Major로 판단되는 비기능 이슈 대상 영상 편집 방식으로 제품 본부 내 이슈 리스트업"] }, { text: "② 보호자 FollowUp - 진료 후 스케줄러 내 환자 가예약 서비스", sub: ["▸ 디자인 부재 속 개발 의도 및 FollowUp 기능의 가예약 특징을 일반 스케줄링 대비 맥락적으로 파악", "▸ TestCase 또는 TestScenario 부재 상황 Boolean 위주의 DB 컬럼 값들에 대한 UI 정합성 검증 필요", "⇒  탐색적 테스팅, 개발 / QA 동시에 병행하는 페어 프로젝트 진행", "※ **릴리즈 전** 스케줄링 테이블 경계값 분석, DB 내 마이그레이션된 Date 경계값 오차 범위 리포트"] }, { text: "릴리즈 조건 개념 사내 확립", sub: ["✓ 기능 자체 문제에선 대체 가능한 기능이 있는지? UI Path 문제에선 대체 가능한 경로가 있는지?", "✓  자사 제품 개별 이슈 중요도를 측정할 때, 그 기준으로써 비즈니스 리스크를 야기하는 경우는 무엇인지?", "✓  상정하지 않은 프로젝트에서 필요한 테스트 기법, 개발자와 페어로 커뮤니케이션은 어떻게 진행하는지?"] }],
                 },
               ],
             },
