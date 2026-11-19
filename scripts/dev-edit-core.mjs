@@ -19,6 +19,9 @@
 //   move    항목을 한 칸 위(-1) 또는 아래(+1)로 옮긴다.
 //   setImage  카드의 사진(image.src)을 바꾼다. 카드에 image가 없으면 만든다. path는 카드 경로이고 src는 /images/ 아래 webp 파일이다.
 //           (사진 파일 자체는 개발 서버가 올려 받아 저장한다. dev-server.mjs의 /__dev/edit/image)
+//   initLinks  예전 방식의 카드 링크(link, linkText, demo)를 링크 목록(links)으로 바꾼다. path는 카드 경로이다.
+//           저장소 주소는 { label: "GitHub Repo", url }, 배포 주소는 { label: "배포 링크", url }이 된다. 옮긴 속성(link, linkText, demo)은 지운다.
+//           옮길 주소가 없으면 빈 링크 하나({ label: "GitHub Repo", url: "" })로 시작한다. 이미 links가 있으면 거절한다.
 //   delete  항목을 지운다. 번호(no)나 이름표(id)가 있는 항목(카드, 섹션)과 배열의 마지막 항목은 지우지 않는다.
 //           카드와 섹션의 번호는 한 번 쓰면 다시 쓰지 않는 규칙이 있어서, 그런 삭제는 IDE에서 사람이 한다.
 // 섹션 추가와 섹션 이동은 이 도구의 범위 밖이다. (구조가 크게 바뀌므로 상의해서 IDE에서 한다.)
@@ -26,9 +29,9 @@ import { parse } from "acorn";
 
 export const PLACEHOLDER = "새 글자";
 // 새 항목을 만들 때 값을 복사하지 않는 속성. 주소와 사진은 사람이 정한다.
-const OMIT_KEYS = new Set(["id", "link", "linkText", "demo", "image", "target"]);
+const OMIT_KEYS = new Set(["id", "link", "linkText", "demo", "url", "image", "target"]);
 // 값이 없을 때 set으로 새로 만들 수 있는 속성. (카드의 링크 칸. 편집 모드에서 빈 칸에 주소를 쓰면 만들어진다.)
-const CREATABLE_PROPS = new Set(["link", "linkText", "demo"]);
+const CREATABLE_PROPS = new Set(["link", "linkText", "demo", "url"]);
 const MAX_TEXT = 5000;
 const PARSE_OPTIONS = { ecmaVersion: "latest", sourceType: "module" };
 
@@ -336,6 +339,50 @@ ${indent}image: { src: ${JSON.stringify(op.src)}, alt: ${JSON.stringify(alt)} }`
   return { source: source.slice(0, last.end) + text + source.slice(last.end) };
 }
 
+// 객체의 속성 하나를 지운 새 소스를 만든다. 속성이 자기 줄에 있으면 그 줄을 통째로 지운다.
+function removeProp(source, objectNode, name) {
+  const prop = objectNode.properties.find((item) => item.type === "Property" && keyName(item) === name);
+  if (!prop) return source;
+  const lineStart = source.lastIndexOf("\n", prop.start - 1) + 1;
+  const lineEndAt = source.indexOf("\n", prop.end);
+  const lineEnd = lineEndAt < 0 ? source.length : lineEndAt;
+  const before = source.slice(lineStart, prop.start);
+  const after = source.slice(prop.end, lineEnd);
+  if (/^[ \t]*$/.test(before) && /^[ \t]*,?[ \t]*(\/\/.*)?\r?$/.test(after)) {
+    return source.slice(0, lineStart) + source.slice(Math.min(lineEnd + 1, source.length));
+  }
+  // 한 줄에 여러 속성이 있으면 뒤의 쉼표와 공백까지 지운다.
+  const tail = /^\s*,\s*/.exec(source.slice(prop.end))?.[0] ?? "";
+  return source.slice(0, prop.start) + source.slice(prop.end + tail.length);
+}
+
+const isHttp = (value) => typeof value === "string" && /^https?:\/\//.test(value);
+
+function opInitLinks(source, op) {
+  if (!CARD_PATH.test(op.path ?? "")) throw new Error("카드 경로가 아님");
+  let { node: card } = resolve(pageOf(source), op.path);
+  if (card.type !== "ObjectExpression") throw new Error(`카드가 아님: ${op.path}`);
+  if (getProp(card, "links")) throw new Error("이미 링크 목록(links)이 있음");
+  const text = (name) => (isString(getProp(card, name)) ? getProp(card, name).value : "");
+  const repo = isHttp(text("linkText")) ? text("linkText") : text("link");
+  const links = [];
+  if (repo) links.push({ label: "GitHub Repo", url: repo });
+  if (text("demo")) links.push({ label: "배포 링크", url: text("demo") });
+  if (links.length === 0) links.push({ label: "GitHub Repo", url: "" });
+  // 옮긴 속성을 지운다. 지울 때마다 위치가 바뀌므로 카드를 다시 찾는다.
+  let next = source;
+  for (const name of ["link", "linkText", "demo"]) {
+    next = removeProp(next, card, name);
+    card = resolve(pageOf(next), op.path).node;
+  }
+  const last = card.properties[card.properties.length - 1];
+  if (!last) throw new Error("빈 카드에는 링크 목록을 만들지 않음");
+  const indent = lineIndent(next, last.start);
+  const value = serialize(links, indent, true);
+  next = next.slice(0, last.end) + withNewlines(`,\n${indent}links: ${value}`, next) + next.slice(last.end);
+  return { source: next };
+}
+
 function opMove(source, op) {
   if (op.dir !== -1 && op.dir !== 1) throw new Error("이동 방향 오류");
   const { container, index, steps } = resolve(pageOf(source), op.path);
@@ -400,6 +447,7 @@ export function applyOps(source, ops) {
     else if (op?.type === "insertChild") outcome = opInsertChild(current, op);
     else if (op?.type === "move") outcome = opMove(current, op);
     else if (op?.type === "setImage") outcome = opSetImage(current, op);
+    else if (op?.type === "initLinks") outcome = opInitLinks(current, op);
     else if (op?.type === "delete") outcome = opDelete(current, op);
     else throw new Error(`알 수 없는 작업: ${op?.type}`);
     current = outcome.source;

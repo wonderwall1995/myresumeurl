@@ -81,3 +81,8 @@
     border-block-start: 1px solid var(--color-text);
   }
 }
+
+/* 갤러리 안내 문구는 갤러리가 보이는 넓은 화면에서만 필요하다. 여기서는 숨긴다. */
+.gallery-notice {
+  display: none;
+}

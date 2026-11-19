@@ -3,7 +3,9 @@
 // 타일을 누르면 모달 창에 상세 내용이 나타난다.
 // 인쇄할 때는 CSS가 격자를 풀고 모든 상세를 펼쳐서 출력한다. (print.css)
 // 카드 항목: no, title, link, linkText, demo, summary, body, image. title만 필수이다.
-// 링크는 두 개이다. 저장소(link, linkText)는 글자가 항상 "GitHub Repo"이고, 배포(demo)는 글자가 항상 "배포 링크"이다. 둘 다 새 탭으로 열린다.
+// 링크는 두 방식이 있다.
+//   links 배열: [{ label: "Frontend Repo", url: "저장소 주소" }, ...] 링크마다 이름을 붙인다. 최대 3개를 권한다. 있으면 이 방식을 쓴다.
+//   예전 방식: 저장소(link, linkText)는 글자가 항상 "GitHub Repo"이고, 배포(demo)는 글자가 항상 "배포 링크"이다. 둘 다 새 탭으로 열린다.
 // linkText에 주소를 쓰면 그 주소로 연결한다. demo는 배포된 프로젝트에만 쓴다. 없으면 나타나지 않는다.
 // 인쇄할 때는 프로젝트마다 맨 위에 섹션 제목("프로젝트"와 선)이 다시 나온다.
 // 인쇄할 때는 카드 틀 없이 글자만 나오고 주소는 찍지 않는다. PDF에서는 글자가 하이퍼링크이다. (print.css)
@@ -70,11 +72,46 @@ function makeLink({ href, text, id, editPath, mode, placeholder, className }) {
 // 개발 서버의 편집 모드인지. (lib/dom.js와 같은 기준)
 const isEditing = () => document.documentElement.hasAttribute("data-dev-edit");
 
-// 카드의 링크 두 개(저장소, 배포)를 한 줄로 묶어 만든다. 둘 다 없으면 null을 반환한다.
+// 예전 방식: 카드의 링크 두 개(저장소, 배포)를 한 줄로 묶어 만든다. 둘 다 없으면 null을 반환한다.
 //   저장소  글자는 "GitHub Repo". linkText가 주소이면 그 주소로, 아니면 link로 연결한다. (card.link, card.linkText)
 //   배포    글자는 "배포 링크". 주소는 card.demo이다. 배포된 프로젝트에만 쓴다.
+// 링크 목록(card.links)의 링크 하나. { label: "보이는 글자", url: "주소" }
+// 보이는 글자는 label 그대로이다. (고정 글자가 아니다. 링크가 여러 개면 이름으로 구별해야 하기 때문이다.)
+// 항목(span.gallery-link-item)이 편집 단위이다. 편집 모드에서는 글자 옆에 주소 칸(span.gallery-link-url)이 함께 나와 주소도 고친다.
+// 배포 화면에서는 주소가 http로 시작하지 않으면 연결하지 않고 글자만 보인다. 글자도 비면 그리지 않는다.
+// 이름표: 링크 글자 <카드>-<prefix>link-l1, 주소 칸 <카드>-<prefix>link-l1-url
+function createLinkItem(link, index, id, p, prefix) {
+  const editing = isEditing();
+  const label = String(link?.label ?? "");
+  const url = String(link?.url ?? "");
+  if (!label && !editing) return null;
+  const itemPath = `${p}.links[${index}]`;
+  const linkId = partId(id, `${prefix}link-l${index + 1}`);
+  const anchor = el("a", {
+    text: label,
+    className: "gallery-link",
+    attrs: { ...(isHttp(url) ? { href: url, target: "_blank" } : {}), ...testAttr(linkId) },
+    edit: `${itemPath}.label`,
+    placeholder: "링크 이름",
+  });
+  const urlBox = editing
+    ? el("span", { text: url, className: "gallery-link-url", attrs: testAttr(`${linkId}-url`), edit: `${itemPath}.url`, placeholder: "주소 (http로 시작)" })
+    : null;
+  return el("span", { className: "gallery-link-item", editItem: itemPath }, [anchor, urlBox].filter(Boolean));
+}
+
+// 링크 목록을 한 줄로 묶어 만든다. 링크 사이는 가는 세로선으로 나눈다. (CSS .gallery-links > * + *)
+// 최대 3개를 권한다. 편집 모드의 + 버튼은 3개에서 멈춘다. (scripts/dev-edit.js)
+function createLinkList(card, id, p, prefix) {
+  const items = card.links.map((link, index) => createLinkItem(link, index, id, p, prefix)).filter(Boolean);
+  if (items.length === 0) return null;
+  return el("div", { className: "gallery-links gallery-links-list" }, items);
+}
+
+// 카드의 링크를 만든다. links 배열이 있으면 그 목록을 쓰고(createLinkList), 없으면 예전 방식의 두 링크(저장소, 배포)를 쓴다.
 // prefix는 이름표의 접두어이다. 타일은 "", 모달은 "dialog-"이다.
 function createLinks(card, id, p, prefix) {
+  if (Array.isArray(card.links) && card.links.length > 0) return createLinkList(card, id, p, prefix);
   const repoHref = isHttp(card.linkText) ? card.linkText : card.link;
   const repo = makeLink({
     href: repoHref,
@@ -141,5 +178,10 @@ export function renderProjects(root, data) {
   renderHeading(root, data);
   // 갤러리를 본문 영역(div)으로 한 번 더 감싼다. 이 영역이 섹션 기준 좌우 여백을 가진다. (CSS gallery-body)
   const gallery = el("ul", { className: "gallery", attrs: testAttr(partId(data.id, "gallery")) }, items);
-  root.append(el("div", { className: "gallery-body", attrs: testAttr(partId(data.id, "body")) }, [gallery]));
+  // 안내 문구(data.notice). 갤러리 위에 작은 글자로 한 줄 나온다. 넓은 화면에서만 보이고 인쇄와 모바일에서는 숨긴다. (CSS gallery-notice)
+  // 인쇄와 모바일은 갤러리가 아니라 펼친 문서 모양이라 안내가 필요 없다.
+  const notice = data.notice
+    ? el("p", { text: data.notice, className: "gallery-notice", attrs: testAttr(partId(data.id, "notice")), edit: `${sectionPath(data.id)}.notice` })
+    : null;
+  root.append(el("div", { className: "gallery-body", attrs: testAttr(partId(data.id, "body")) }, [notice, gallery].filter(Boolean)));
 }

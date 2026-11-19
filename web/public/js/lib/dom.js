@@ -27,7 +27,7 @@ function setAttr(node, name, value) {
 }
 
 // 개발 서버가 HTML의 html 요소에 data-dev-edit를 붙인다. (scripts/dev-client.js) 그때만 편집 모드이다.
-const isEditMode = () => typeof document !== "undefined" && Boolean(document.documentElement?.hasAttribute("data-dev-edit"));
+export const isEditMode = () => typeof document !== "undefined" && Boolean(document.documentElement?.hasAttribute("data-dev-edit"));
 
 // 요소를 만든다.
 // options.text: 글자. options.className: 클래스. options.attrs: 속성 객체.

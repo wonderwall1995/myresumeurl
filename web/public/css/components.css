@@ -462,6 +462,13 @@
   padding-inline: var(--section-text-padding);
 }
 
+/* 갤러리 안내 문구. 섹션 제목 아래, 갤러리 위에 작은 글자로 나온다.
+   인쇄(gallery-document.css)와 모바일(gallery-mobile.css)에서는 숨긴다. */
+.gallery-notice {
+  margin: 0 0 var(--space-unit);
+  font-size: var(--font-size-small);
+}
+
 /* 인쇄용 섹션 제목. 화면에서는 숨기고, 인쇄에서만 보인다. (print.css) */
 .print-heading {
   display: none;
@@ -527,7 +534,16 @@
   display: none;
 }
 
-.gallery-link + .gallery-link {
+/* 링크 목록(links)의 항목. 편집 모드에서는 링크 글자와 주소 칸이 함께 들어 있다. */
+.gallery-link-item {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space-unit) / 2);
+  max-width: 100%;
+}
+
+.gallery-link + .gallery-link,
+.gallery-link-item + .gallery-link-item {
   padding-inline-start: calc(var(--space-unit) * 1.5);
   border-inline-start: 1px solid var(--color-text);
 }

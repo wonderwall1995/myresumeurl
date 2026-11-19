@@ -407,6 +407,8 @@ export const mainPage = {
       id: "s03-projects",
       type: "projects",
       heading: "프로젝트",
+      // 갤러리 위의 작은 안내 문구. 넓은 화면에서만 보이고 인쇄와 모바일에서는 나오지 않는다.
+      notice: "*인쇄에선 갤러리 UI 형태 대신, 일반적인 평문 문서로 출력됩니다.",
       cards: [
         {
           no: 1,

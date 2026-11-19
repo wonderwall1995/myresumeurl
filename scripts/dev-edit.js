@@ -28,6 +28,8 @@
   const UI = "dev-edit-ui";
   const STORE_KEY = "devEditOn";
   const TOAST_KEY = "devEditToast";
+  // 저장 뒤 새로고침할 때 열려 있던 프로젝트 상세(모달)의 id. 새로고침 뒤 다시 연다.
+  const DIALOG_KEY = "devEditDialog";
   const KIND_LABEL = {
     cards: "카드",
     items: "항목",
@@ -38,7 +40,10 @@
     skills: "스킬",
     body: "내용",
     sub: "하위 줄",
+    links: "링크",
   };
+  // 프로젝트 카드 링크 목록(links)의 최대 개수. 이보다 많으면 + 버튼이 멈춘다. (사용자 결정)
+  const LINKS_MAX = 3;
   // 번호를 가진 카드의 경로. 삭제하지 않는다.
   const NUMBERED = /\.cards\[no=\d+\]$/;
   // 기호 선택 창에 나오는 글머리 기호. 흑백 인쇄에서 또렷한 기호만 둔다. (줄 맨 앞의 기호 마커. lib/markdown.js)
@@ -105,6 +110,10 @@
   function handoffToast(title, detail) {
     try {
       sessionStorage.setItem(TOAST_KEY, JSON.stringify({ title, detail }));
+      // 모달 안에서 고치다가 저장하면 새로고침 뒤에도 같은 모달을 다시 연다. 그래야 이어서 고칠 수 있다.
+      const open = document.querySelector("dialog.modal[open]");
+      if (open?.id) sessionStorage.setItem(DIALOG_KEY, open.id);
+      else sessionStorage.removeItem(DIALOG_KEY);
     } catch {
       // 저장소를 쓸 수 없으면 새로고침 뒤에는 알림이 보이지 않는다. 동작에는 문제가 없다.
     }
@@ -122,7 +131,7 @@
     }
   }
 
-  const OP_LABEL = { insert: "항목 추가", insertChild: "하위 줄 추가", delete: "항목 삭제", move: "항목 이동", set: "글자 수정" };
+  const OP_LABEL = { initLinks: "링크 목록 만들기", insert: "항목 추가", insertChild: "하위 줄 추가", delete: "항목 삭제", move: "항목 이동", set: "글자 수정" };
 
   async function post(url, body) {
     const response = await fetch(url, {
@@ -464,6 +473,47 @@
     }
   }
 
+  // 모달(dialog)이 열려 있으면 모달 바깥의 모든 요소는 눌리지 않는다. (브라우저가 바깥을 inert로 만든다.)
+  // 저장 막대, 도구 막대, 기호 창, 알림도 화면에는 보이지만 눌리지 않는다. 그래서 모달이 열려 있는 동안에는 이 편집 도구를 모달 안으로 옮긴다.
+  // 모달이 닫히면 body로 되돌린다. 옮기면 popover가 닫히므로 열려 있던 것은 다시 띄운다. 다시 띄운 popover는 맨 위 층의 맨 앞에 온다.
+  function raiseUi() {
+    const host = document.querySelector("dialog.modal[open]") ?? document.body;
+    for (const node of [bar, tools, symbols, toast, imageInput]) {
+      if (!node) continue;
+      const wasOpen = node.hasAttribute("popover") && node.matches(":popover-open");
+      if (node.parentElement !== host) host.append(node);
+      else if (wasOpen) node.hidePopover();
+      if (wasOpen && !node.matches(":popover-open")) node.showPopover();
+    }
+    placeTools();
+  }
+
+  // 모달이 열리고 닫히는 것을 지켜본다. (open 속성의 변화)
+  // 열리면 편집 도구를 앞으로 꺼내고, 닫히면 그 모달 안에서 선택한 항목의 선택을 푼다. (도구 막대가 빈 자리에 남지 않게 한다.)
+  function watchDialogs() {
+    new MutationObserver((records) => {
+      for (const record of records) {
+        const dialog = record.target;
+        if (!(dialog instanceof HTMLDialogElement) || !enabled) continue;
+        if (!dialog.open && selected && dialog.contains(selected)) deselect();
+        raiseUi();
+      }
+    }).observe(document.body, { attributes: true, attributeFilter: ["open"], subtree: true });
+  }
+
+  // 저장 뒤 새로고침되었으면 그 전에 열려 있던 모달을 다시 연다.
+  function reopenDialog() {
+    let id = "";
+    try {
+      id = sessionStorage.getItem(DIALOG_KEY) ?? "";
+      sessionStorage.removeItem(DIALOG_KEY);
+    } catch {
+      return;
+    }
+    const dialog = id ? document.getElementById(id) : null;
+    if (dialog instanceof HTMLDialogElement && !dialog.open) dialog.showModal();
+  }
+
   function removeOpenButtons() {
     for (const button of $$(".dev-edit-open")) button.remove();
   }
@@ -568,7 +618,11 @@
 
   // 항목을 선택한다. 도구 막대는 선택된 동안 고정되어 있다.
   function select(item) {
-    if (selected === item && tools.matches(":popover-open")) return;
+    if (selected === item && tools.matches(":popover-open")) {
+      // 같은 항목이어도 그사이 모달이 열렸으면 도구 막대가 모달 뒤에 있다. 앞으로 다시 꺼낸다.
+      raiseUi();
+      return;
+    }
     closeSymbols();
     selected?.classList.remove("dev-edit-item-hit");
     selected = item;
@@ -584,9 +638,12 @@
     tools.querySelector('[data-act="child"]').hidden = !inRowList || isDivider;
     // 사진 버튼은 프로젝트 타일(li.gallery-item)에서만 나온다.
     tools.querySelector('[data-act="image"]').hidden = !item.classList.contains("gallery-item");
+    // 링크 목록 버튼은 아직 예전 방식(저장소, 배포 두 칸)인 프로젝트 카드에서만 나온다. 이미 목록이면 링크를 눌러 + 버튼으로 늘린다.
+    tools.querySelector('[data-act="links"]').hidden = !item.classList.contains("gallery-item") || Boolean(item.querySelector(".gallery-link-item"));
     tools.querySelector('[data-act="divider"]').hidden = !(inRowList || isRoleHead);
     // 기호 버튼은 서식(data-md)이 켜진 글자가 있는 항목에서만 나온다. (소제목, 직책명 같은 글자에는 기호 마커가 없다.)
-    tools.querySelector('[data-act="symbol"]').hidden = !textTarget(item);
+    // 프로젝트 카드(li.gallery-item) 전체를 고른 경우에는 숨긴다. 카드 안 요약 글에만 적용되어 무엇이 바뀌는지 알기 어렵다. (요약 글에는 기호를 직접 입력한다.)
+    tools.querySelector('[data-act="symbol"]').hidden = !textTarget(item) || item.classList.contains("gallery-item");
     const remove = tools.querySelector('[data-act="delete"]');
     const locked = NUMBERED.test(path);
     remove.disabled = locked;
@@ -609,6 +666,11 @@
     if (!enabled) return;
     const target = event.target;
     if (target.closest?.(`.${UI}`)) return;
+    // 모달의 닫기 버튼은 모달을 닫는 동작이다. 모달을 품은 카드가 선택되지 않게 선택을 푼다.
+    if (target.closest?.(".modal-close")) {
+      deselect();
+      return;
+    }
     const item = target.closest?.("[data-edit-item]");
     if (item) select(item);
     else deselect();
@@ -686,7 +748,13 @@
     } else if (act === "up" || act === "down") {
       structural([{ type: "move", path, dir: act === "up" ? -1 : 1 }]);
     } else if (act === "add") {
+      if (/\.links\[\d+\]$/.test(path) && item.parentElement.querySelectorAll(":scope > .gallery-link-item").length >= LINKS_MAX) {
+        say(`링크는 ${LINKS_MAX}개까지입니다`, "더 넣으려면 기존 링크를 지우거나 본문에 적으세요.", "error");
+        return;
+      }
       structural([{ type: "insert", path }]);
+    } else if (act === "links") {
+      structural([{ type: "initLinks", path }]);
     } else if (act === "child") {
       structural([{ type: "insertChild", path }]);
     } else if (act === "divider") {
@@ -761,6 +829,7 @@
       ["add", "+", "아래에 같은 종류 추가"],
       ["child", "+ 하위", "아래에 한 단계 들여쓴 하위 줄 추가 (글자가 1pt 작음)"],
       ["divider", "구분선", "이 줄 아래에 구분선 추가"],
+      ["links", "링크 목록", "저장소, 배포 링크를 이름을 붙일 수 있는 링크 목록으로 바꿉니다 (최대 3개)"],
       ["image", "사진", "이 프로젝트의 사진 올리기 (jpg, png, webp. 자동으로 줄여 저장)"],
       ["symbol", "기호", "줄 맨 앞의 글머리 기호 고르기 (커서가 있는 줄에 적용)"],
       ["delete", "삭제", "삭제"],
@@ -831,7 +900,8 @@
     document.addEventListener("paste", onPaste, true);
     document.addEventListener("click", onClickCapture, true);
     document.addEventListener("pointerdown", onPointerDown, true);
-    window.addEventListener("scroll", () => selected && tools.matches(":popover-open") && placeTools(), { passive: true });
+    // 모달 본문처럼 페이지 안에서 따로 스크롤되는 영역도 잡도록 capture로 듣는다. (scroll 이벤트는 위로 전달되지 않는다.)
+    document.addEventListener("scroll", () => selected && tools.matches(":popover-open") && placeTools(), { passive: true, capture: true });
     window.addEventListener("resize", placeTools);
     window.addEventListener("beforeunload", (event) => {
       if (pending.size > 0) event.preventDefault();
@@ -845,7 +915,11 @@
     } catch {
       remembered = false;
     }
-    if (remembered || new URLSearchParams(location.search).has("edit")) setEnabled(true, reloaded);
+    watchDialogs();
+    if (remembered || new URLSearchParams(location.search).has("edit")) {
+      setEnabled(true, reloaded);
+      if (reloaded) reopenDialog();
+    }
     else {
       clearHistory();
       for (const node of $$("[data-md]")) showDisplayView(node);

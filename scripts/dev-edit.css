@@ -111,7 +111,26 @@
 }
 
 /* 비어 있는 칸(프로젝트의 배포 링크 등)은 편집 모드에서 안내 글자를 보여 눌러서 쓸 수 있게 한다. */
-.dev-edit-on [data-placeholder]:empty {
+/* 링크 목록의 주소 칸. 편집을 켰을 때만 링크 글자 옆에 나온다. 작은 고정폭 글자로 이름과 구별한다.
+   (개발 서버의 화면은 편집을 끈 동안에도 편집용으로 그려져 있으므로 숨겨 둔다. 배포 화면에는 이 칸이 없다.) */
+.gallery-link-url {
+  display: none;
+}
+
+.dev-edit-on .gallery-link-url {
+  display: inline;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font: 12px/1.4 ui-monospace, Consolas, monospace;
+  color: #374151;
+}
+
+/* 빈 글자 항목(li)은 배포 화면에 나오지 않는다. 개발 서버에서도 편집을 끈 동안에는 숨겨 배포 화면과 같게 보인다. (편집을 켜면 "빈 항목"으로 보인다.) */
+html:not(.dev-edit-on) li[data-placeholder]:empty {
+  display: none;
+}
+
+.dev-edit-on .gallery-link[data-placeholder]:empty {
   display: inline;
 }
 
