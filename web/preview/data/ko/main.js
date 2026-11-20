@@ -414,56 +414,140 @@ export const mainPage = {
           no: 1,
           title: "Web 자동화 테스트 예제",
           summary: "Cypress.io 팀 웹데모 대상\n자동화 테스트 구현 시연",
-          link: "https://github.com/wonderwall1995",
-          linkText: "https://github.com/wonderwall1995/cypress-realworld-for-portfolio",
-          image: { src: "/images/project-1-1794702591101.webp", alt: "결함 건수 추이를 나타낸 샘플 막대 그림" },
-          body: [
-            "내용의 작성 중에 있습니다.",
-            "",
-            "",
-            "",
+          blocks: [
+            {
+              type: "image",
+              src: "/images/project-1-1795137220795.webp",
+              alt: "결함 건수 추이를 나타낸 샘플 막대 그림",
+            },
+            {
+              type: "image",
+              src: "/images/project-1-1795137927807.webp",
+              alt: "Web 자동화 테스트 예제 사진 2",
+            },
+            {
+              type: "head",
+              title: "Web - App 자동화 테스트 예제 프로젝트",
+              links: [
+                {
+                  label: "Web Repo",
+                  url: "https://github.com/wonderwall1995/cypress-realworld-for-portfolio",
+                },
+                {
+                  label: "App Repo",
+                  url: "https://github.com/wonderwall1995/cypress-realworld-for-portfolio",
+                },
+                {
+                  label: "Web 배포 링크",
+                  url: "https://demo.hwk-resume.web.chickenkiller.com/",
+                },
+              ],
+            },
+            {
+              type: "text",
+              text: ["내용의 작성 중에 있습니다."],
+            },
           ],
-          demo: "https://demo.hwk-resume.web.chickenkiller.com/",
         },
         {
           no: 2,
           title: "Mobile 자동화 테스트 예제",
           summary: "Cypress.io 팀 웹 데모 프로젝트의 Flutter 앱 구현\n자동화 테스트 구현 시연",
-          link: "https://github.com/wonderwall1995",
-          linkText: "https://github.com/wonderwall1995/cypress-realworld-for-portfolio-mobile",
-          image: { src: "/images/project-2.svg", alt: "자동화 파이프라인을 나타낸 샘플 흐름 그림" },
-          body: [
-            "내용의 작성 중에 있습니다.",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
+          blocks: [
+            {
+              type: "image",
+              src: "/images/project-2-1795137312995.webp",
+              alt: "자동화 파이프라인을 나타낸 샘플 흐름 그림",
+            },
+            {
+              type: "head",
+              title: "GitHub App",
+              links: [
+                {
+                  label: "GitHub Repo",
+                  url: "https://github.com/wonderwall1995/github-app",
+                },
+              ],
+            },
+            {
+              type: "text",
+              text: ["내용의 작성 중에 있습니다."],
+            },
           ],
         },
         {
           no: 3,
           title: "헤르메스 - 테스트 게이트",
           summary: "Hermes Agent - Claude Code 연동,\n테스트 문서 생성 자동화 & 테스트 문서 평가 자동화",
-          link: "https://github.com/wonderwall1995",
-          linkText: "https://github.com/wonderwall1995/hermes-test-gate",
-          image: { src: "/images/project-3.svg", alt: "품질 추이를 나타낸 샘플 선 그림" },
-          body: "내용의 작성 중에 있습니다.",
+          blocks: [
+            {
+              type: "image",
+              src: "/images/project-3-1795137291235.webp",
+              alt: "품질 추이를 나타낸 샘플 선 그림",
+            },
+            {
+              type: "image",
+              src: "/images/project-3-1795140488444.webp",
+              alt: "헤르메스 - 테스트 게이트 사진 2",
+            },
+            {
+              type: "head",
+              title: "헤르메스 - 테스트 게이트",
+              links: [
+                {
+                  label: "hermes-ced-taker Repo",
+                  url: "https://github.com/wonderwall1995/hermes-ced-taker",
+                },
+                {
+                  label: "hermes-controller Repo",
+                  url: "https://github.com/wonderwall1995/hermes-controller",
+                },
+                {
+                  label: "hermes-test-gate Repo",
+                  url: "https://github.com/wonderwall1995/hermes-test-gate",
+                },
+              ],
+            },
+            {
+              type: "text",
+              text: ["내용의 작성 중에 있습니다."],
+            },
+          ],
         },
         {
           no: 4,
           title: "DB Key tagger - DB 기반 LLM 맥락 문서 작성",
           summary: "DB 테이블 스냅샷 기반 DB 컬럼 대상 정보 색인\nDB Key 정보 작성, 문서화 및 LLM 맥락 문서 작성\nHermes Agent - Obsidian 환경 전송",
-          link: "https://github.com/wonderwall1995",
-          linkText: "https://github.com/wonderwall1995/dbviewer-tagger",
-          image: { src: "/images/project-1.svg", alt: "샘플 막대 그림" },
-          body: ["내용의 작성 중에 있습니다.", ""],
+          blocks: [
+            {
+              type: "image",
+              src: "/images/project-4-1795137278599.webp",
+              alt: "샘플 막대 그림",
+            },
+            {
+              type: "image",
+              src: "/images/project-4-1795140495167.webp",
+              alt: "DB Key tagger - DB 기반 LLM 맥락 문서 작성 사진 2",
+            },
+            {
+              type: "head",
+              title: "DBViewer-tagger, DB 기반 LLM 맥락 문서 작성 도구",
+              links: [
+                {
+                  label: "GitHub Repo",
+                  url: "https://github.com/wonderwall1995/dbviewer-tagger",
+                },
+                {
+                  label: "배포 주소 (코드 확인!)",
+                  url: "https://dbtagger.hwk-resume.web.chickenkiller.com/",
+                },
+              ],
+            },
+            {
+              type: "text",
+              text: ["63PB-6HPM-R5KK"],
+            },
+          ],
         },
       ],
     },

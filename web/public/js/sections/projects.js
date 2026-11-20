@@ -2,7 +2,9 @@
 // 항목(타일)에는 사진, 제목, 요약이 있다. 타일 전체가 눌린다.
 // 타일을 누르면 모달 창에 상세 내용이 나타난다.
 // 인쇄할 때는 CSS가 격자를 풀고 모든 상세를 펼쳐서 출력한다. (print.css)
-// 카드 항목: no, title, link, linkText, demo, summary, body, image. title만 필수이다.
+// 카드 항목: no, title, summary, blocks. title만 필수이다.
+//   blocks: 제목줄(head), 사진(image), 줄글(text) 블록을 원하는 순서로 쌓는다. (createBlock) 있으면 이 방식을 쓴다.
+//   예전 방식(blocks가 없을 때): links(또는 link, linkText, demo), images(또는 image), body.
 // 링크는 두 방식이 있다.
 //   links 배열: [{ label: "Frontend Repo", url: "저장소 주소" }, ...] 링크마다 이름을 붙인다. 최대 3개를 권한다. 있으면 이 방식을 쓴다.
 //   예전 방식: 저장소(link, linkText)는 글자가 항상 "GitHub Repo"이고, 배포(demo)는 글자가 항상 "배포 링크"이다. 둘 다 새 탭으로 열린다.
@@ -24,12 +26,49 @@ import { createModal } from "../common/modal.js";
 import { createBody, renderHeading } from "../common/section-parts.js";
 
 // 사진 요소를 만든다. 사진이 없으면 null을 반환한다.
-function createImage(image, id, className) {
+// editItem은 사진 목록(images)의 한 항목일 때 그 경로이다. 편집 모드에서 사진을 누르면 그 사진이 선택된다.
+function createImage(image, id, className, editItem) {
   if (!image?.src) return null;
   return el("img", {
     className,
     attrs: { src: image.src, alt: image.alt ?? "", ...testAttr(id) },
+    editItem,
   });
+}
+
+// 사진 아래 줄글. images[n].text는 줄글(문자열) 목록이다. 줄글마다 문단 하나이다.
+// 줄글 안에서 # 제목, ## 소제목, ### 작은 제목과 **굵게**를 쓸 수 있다. (md 블록 모드. lib/markdown.js)
+// 편집 모드에서는 줄글을 누르고 + 버튼을 누르면 그 아래에 줄글이 하나 더해진다. 빈 줄글("")은 편집 모드에서만 안내 글자로 보인다.
+// 이름표: 묶음 <id>, 줄글 <id>-t1, <id>-t2 ...
+function createImageText(text, id, editBase) {
+  const list = Array.isArray(text) ? text : typeof text === "string" ? [text] : [];
+  const editing = isEditing();
+  const nodes = list.map((value, index) => {
+    const raw = String(value ?? "");
+    if (!raw && !editing) return null;
+    const path = Array.isArray(text) ? `${editBase}[${index}]` : editBase;
+    return el("p", {
+      text: raw,
+      className: "gallery-text",
+      attrs: testAttr(partId(id, `t${index + 1}`)),
+      edit: path,
+      editItem: Array.isArray(text) ? path : undefined,
+      md: "block",
+      placeholder: raw ? undefined : "줄글 (# 제목, ## 소제목, ### 작은 제목 가능)",
+    });
+  }).filter(Boolean);
+  return nodes.length > 0 ? el("div", { className: "gallery-text-block", attrs: testAttr(id) }, nodes) : null;
+}
+
+// 둘째 사진부터의 묶음(사진 + 줄글). 인쇄에서는 묶음마다 새 쪽에서 시작한다. (print.css .gallery-page)
+// 이름표: 묶음 <카드>-photo2, 사진 <카드>-photo2-image, 줄글 <카드>-photo2-text-t1
+function createImagePage(image, index, id, p) {
+  const pageId = partId(id, `photo${index + 1}`);
+  const path = `${p}.images[${index}]`;
+  const img = createImage(image, partId(pageId, "image"), "gallery-page-image");
+  const text = createImageText(image?.text, partId(pageId, "text"), `${path}.text`);
+  if (!img && !text) return null;
+  return el("div", { className: "gallery-page", attrs: testAttr(pageId), editItem: path }, [img, text].filter(Boolean));
 }
 
 // 타일의 제목(h3)을 만든다.
@@ -140,16 +179,90 @@ function createLinks(card, id, p, prefix) {
 // 격자의 항목 하나를 만든다. 타일과 모달 창을 함께 담는다.
 // 인쇄할 때 프로젝트마다 맨 위에 다시 나오는 섹션 제목("프로젝트"와 아래 선). 화면에서는 숨겨져 있다. (CSS print-heading)
 // 편집 경로가 없다. 제목은 섹션 제목(h2)에서 고친다.
-function createPrintHeading(heading, id) {
-  return heading ? el("div", { text: heading, className: "print-heading", attrs: { "aria-hidden": "true", ...testAttr(partId(id, "print-heading")) } }) : null;
+// 인쇄의 쪽 머리에는 프로젝트 번호를 붙인다. 예: "프로젝트 01" (order.index는 1부터)
+function createPrintHeading(heading, id, order) {
+  if (!heading) return null;
+  const text = order ? `${heading} ${pad2(order.index)}` : heading;
+  return el("div", { text, className: "print-heading", attrs: { "aria-hidden": "true", ...testAttr(partId(id, "print-heading")) } });
 }
 
-function createItem(card, id, p, heading) {
+const pad2 = (value) => String(value).padStart(2, "0");
+
+// 프로젝트 번호 표시. 예: "PROJECT 01 / 04". 화면(문서 모양)에서 프로젝트 맨 위, 사진 위에 작은 글자로 나온다.
+// 면접관이 "두 번째 프로젝트"처럼 가리키기 쉽게 한다. 인쇄에서는 숨기고 쪽 머리(createPrintHeading)가 번호를 보인다. (CSS gallery-number)
+// 편집하지 않는다. 번호는 화면에 나오는 순서이다.
+function createNumber(order, id) {
+  if (!order) return null;
+  return el("p", { text: `PROJECT ${pad2(order.index)} / ${pad2(order.total)}`, className: "gallery-number", attrs: testAttr(partId(id, "number")) });
+}
+
+// 블록 하나. 블록은 세 종류이다.
+//   head   제목줄. { type: "head", title: "제목", links: [{ label, url }] } 제목 한 줄, 그 아래 링크 한 줄이다. 둘 다 가운데 정렬이다.
+//   image  사진. { type: "image", src: "/images/...", alt: "설명" }
+//   text   줄글. { type: "text", text: ["줄글", ...] } 줄글 하나가 문단 하나이다. # 제목과 **굵게**를 쓸 수 있다.
+// 블록(div.gallery-block)이 편집 단위이다. 편집 모드에서 블록을 누르면 순서 바꾸기, 삭제, 다른 블록 추가를 할 수 있다.
+// 이름표: 블록 <카드>-b1, 제목 <카드>-b1-title, 링크 <카드>-b1-link-l1, 사진 <카드>-b2-image, 줄글 <카드>-b3-text-t1
+function createBlock(block, index, id, p) {
+  const path = `${p}.blocks[${index}]`;
+  const blockId = partId(id, `b${index + 1}`);
+  let children = [];
+  if (block?.type === "head") {
+    const title = block.title || isEditing()
+      ? el("h3", { text: String(block.title ?? ""), className: "gallery-block-title", attrs: testAttr(partId(blockId, "title")), edit: `${path}.title`, placeholder: "제목" })
+      : null;
+    const links = Array.isArray(block.links) && block.links.length > 0 ? createLinkList(block, id, path, `b${index + 1}-`) : null;
+    children = [title, links];
+  } else if (block?.type === "image") {
+    children = [createImage(block, partId(blockId, "image"), "gallery-page-image")];
+  } else if (block?.type === "text") {
+    children = [createImageText(block.text, partId(blockId, "text"), `${path}.text`)];
+  }
+  children = children.filter(Boolean);
+  if (children.length === 0) return null;
+  return el("div", { className: `gallery-block gallery-block-${block.type}`, attrs: testAttr(blockId), editItem: path }, children);
+}
+
+// 블록으로 짠 프로젝트(card.blocks)의 항목. 화면(문서 모양)과 인쇄에서는 블록이 쓴 순서대로 나온다.
+// 카드의 title은 타일과 모달 제목에 쓴다. 문서 모양에서는 모달 제목을 숨기고 제목줄 블록이 제목이 된다. (CSS .gallery-item-blocks)
+// 타일(갤러리 모양으로 되돌렸을 때)의 사진은 첫 사진 블록, 링크는 첫 제목줄 블록의 링크이다.
+function createBlocksItem(card, id, p, heading, order) {
+  const blockNodes = card.blocks.map((block, index) => createBlock(block, index, id, p)).filter(Boolean);
+  const modal = createModal({ id, title: card.title, titlePath: `${p}.title`, bodyNodes: blockNodes });
+  const firstImage = card.blocks.find((block) => block?.type === "image" && block.src);
+  const headIndex = card.blocks.findIndex((block) => block?.type === "head" && Array.isArray(block.links) && block.links.length > 0);
+  const tileLinks = headIndex >= 0 ? createLinkList(card.blocks[headIndex], id, `${p}.blocks[${headIndex}]`, "") : null;
+  const summary = card.summary
+    ? el("p", { text: card.summary, className: "gallery-summary", attrs: testAttr(partId(id, "summary")), edit: `${p}.summary`, md: "inline" })
+    : null;
+  const tile = el("div", { className: "gallery-tile" }, [
+    createImage(firstImage, partId(id, "image"), "gallery-image"),
+    createTitle(card, id, modal, p),
+    tileLinks,
+    summary,
+  ].filter(Boolean));
+  const printHeading = createPrintHeading(heading, id, order);
+  const number = createNumber(order, id);
+  return el("li", { className: "gallery-item gallery-item-blocks", attrs: { id, ...testAttr(id) }, editItem: p }, [printHeading, number, tile, modal.dialog].filter(Boolean));
+}
+
+// 사진은 두 방식이 있다.
+//   images 목록: [{ src, alt, text: ["줄글", ...] }, ...] 사진마다 그 아래 줄글이 붙는다. 있으면 이 방식을 쓴다.
+//     첫 사진은 타일의 섬네일이고, 모달과 인쇄에서는 사진 -> 이름 -> 링크 -> 첫 사진의 줄글 순서이다.
+//     둘째 사진부터는 사진과 줄글의 묶음이 차례로 이어지고, 인쇄에서는 묶음마다 새 쪽에서 시작한다. 사진 수에는 제한이 없다.
+//   예전 방식: image 한 장과 본문(body).
+// 두 방식 모두 body가 있으면 첫 사진의 줄글 뒤에 나온다.
+// order는 { index, total }이다. 화면에 나오는 프로젝트 중 몇 번째인지(1부터)와 전체 개수이다.
+function createItem(card, id, p, heading, order) {
+  if (Array.isArray(card.blocks) && card.blocks.length > 0) return createBlocksItem(card, id, p, heading, order);
+  const images = Array.isArray(card.images) ? card.images : null;
+  const first = images ? images[0] : card.image;
   const detail = createBody(card.body, partId(id, "body-text"), `${p}.body`);
-  const modalImage = createImage(card.image, partId(id, "dialog-image"), "modal-image");
-  const hasModal = Boolean(detail || modalImage);
+  const modalImage = createImage(first, partId(id, "dialog-image"), "modal-image", images ? `${p}.images[0]` : undefined);
+  const firstText = images ? createImageText(images[0]?.text, partId(id, "photo1-text"), `${p}.images[0].text`) : null;
+  const pages = images ? images.slice(1).map((image, index) => createImagePage(image, index + 1, id, p)).filter(Boolean) : [];
+  const hasModal = Boolean(detail || modalImage || firstText || pages.length > 0);
   const modal = hasModal
-    ? createModal({ id, title: card.title, titlePath: `${p}.title`, bodyNodes: [modalImage, createLinks(card, id, p, "dialog-"), detail].filter(Boolean) })
+    ? createModal({ id, title: card.title, titlePath: `${p}.title`, bodyNodes: [modalImage, createLinks(card, id, p, "dialog-"), firstText, detail, ...pages].filter(Boolean) })
     : null;
 
   const title = createTitle(card, id, modal, p);
@@ -157,22 +270,24 @@ function createItem(card, id, p, heading) {
     ? el("p", { text: card.summary, className: "gallery-summary", attrs: testAttr(partId(id, "summary")), edit: `${p}.summary`, md: "inline" })
     : null;
   const link = createLinks(card, id, p, "");
-  const image = createImage(card.image, partId(id, "image"), "gallery-image");
+  const image = createImage(first, partId(id, "image"), "gallery-image");
 
   const tile = el("div", { className: "gallery-tile" }, [image, title, link, summary].filter(Boolean));
 
   // 모달이 없는 항목은 눌러도 열리지 않는다. 인쇄할 때는 타일을 그대로 출력한다. 클래스로 구분한다.
   const className = hasModal ? "gallery-item" : "gallery-item gallery-item-plain";
-  const printHeading = createPrintHeading(heading, id);
+  const printHeading = createPrintHeading(heading, id, order);
+  const number = createNumber(order, id);
   const children = modal ? [tile, modal.dialog] : [tile];
-  return el("li", { className, attrs: { id, ...testAttr(id) }, editItem: p }, printHeading ? [printHeading, ...children] : children);
+  return el("li", { className, attrs: { id, ...testAttr(id) }, editItem: p }, [printHeading, number, ...children].filter(Boolean));
 }
 
 export function renderProjects(root, data) {
   if (!data.cards?.length) return;
   const items = [];
+  const total = data.cards.filter((card) => card?.title).length;
   eachCard(data, (card, id) => {
-    if (card.title) items.push(createItem(card, id, cardPath(sectionPath(data.id), card.no), data.heading));
+    if (card.title) items.push(createItem(card, id, cardPath(sectionPath(data.id), card.no), data.heading, { index: items.length + 1, total }));
   });
   if (items.length === 0) return;
   renderHeading(root, data);

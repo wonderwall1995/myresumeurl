@@ -19,6 +19,10 @@
 //   move    항목을 한 칸 위(-1) 또는 아래(+1)로 옮긴다.
 //   setImage  카드의 사진(image.src)을 바꾼다. 카드에 image가 없으면 만든다. path는 카드 경로이고 src는 /images/ 아래 webp 파일이다.
 //           (사진 파일 자체는 개발 서버가 올려 받아 저장한다. dev-server.mjs의 /__dev/edit/image)
+//   insertBlock  블록 목록(blocks)에 제목줄(kind: head) 또는 줄글(kind: text) 블록을 넣는다. path는 블록(그 뒤에) 또는 카드(맨 끝에)이다.
+//           사진 블록은 addImage로 넣는다. (path가 블록이거나 블록 목록이 있는 카드이면 사진 블록을 넣는다.)
+//   addImage  카드에 사진을 하나 더한다. path는 카드(맨 끝에) 또는 사진 목록의 한 사진(그 뒤에)이다. src는 /images/ 아래 webp 파일이다.
+//           예전 방식(image 한 장과 body)이면 먼저 사진 목록(images: [{ src, alt, text }])으로 바꾼다. setImage는 path에 사진 목록의 한 사진도 받는다.
 //   initLinks  예전 방식의 카드 링크(link, linkText, demo)를 링크 목록(links)으로 바꾼다. path는 카드 경로이다.
 //           저장소 주소는 { label: "GitHub Repo", url }, 배포 주소는 { label: "배포 링크", url }이 된다. 옮긴 속성(link, linkText, demo)은 지운다.
 //           옮길 주소가 없으면 빈 링크 하나({ label: "GitHub Repo", url: "" })로 시작한다. 이미 links가 있으면 거절한다.
@@ -165,7 +169,8 @@ function blank(value) {
   const out = {};
   for (const [name, item] of Object.entries(value)) {
     if (OMIT_KEYS.has(name)) continue;
-    out[name] = blank(item);
+    // 블록의 종류(type)는 견본 글자로 바꾸지 않는다. 바꾸면 어떤 블록인지 알 수 없게 된다.
+    out[name] = name === "type" ? item : blank(item);
   }
   return out;
 }
@@ -183,6 +188,16 @@ function insertAfterElement(source, container, idx, value) {
   // 배열이 한 줄이면 같은 줄에 이어 붙이고, 여러 줄이면 다음 줄에 넣는다.
   const insertion = containerText.includes("\n") ? `,\n${indent}${text}` : `, ${text}`;
   return source.slice(0, sibling.end) + withNewlines(insertion, source) + source.slice(sibling.end);
+}
+
+// 배열의 맨 앞에 값을 넣은 새 소스를 만든다. (insertAfterElement의 앞쪽 판)
+function insertBeforeFirst(source, container, value) {
+  const first = container.elements[0];
+  const multi = source.slice(first.start, first.end).includes("\n");
+  const indent = lineIndent(source, first.start);
+  const text = serialize(value, indent, multi);
+  const gap = source.slice(container.start, container.end).includes("\n") ? `,\n${indent}` : ", ";
+  return source.slice(0, first.start) + withNewlines(text + gap, source) + source.slice(first.start);
 }
 
 // ---------- 작업 ----------
@@ -282,6 +297,9 @@ function opInsert(source, op) {
   const sibling = toValue(node);
   const value = blank(sibling);
   if (!isPrimitive(value) && !Array.isArray(value) && "no" in sibling) value.no = nextNumber(container);
+  // 블록으로 짠 카드를 따라 만들면 첫 블록만 복사되어 주소가 견본 글자인 사진 블록이 생긴다.
+  // 새 카드는 제목줄과 빈 줄글로 시작한다. 사진은 "사진 추가"로 넣는다. (제목줄 위에 들어간다.)
+  if (!isPrimitive(value) && Array.isArray(sibling?.blocks)) value.blocks = [BLOCK_TEMPLATES.head(), BLOCK_TEMPLATES.text()];
   const next = insertAfterElement(source, container, index, value);
   const last = steps[steps.length - 1];
   const newStep = last.index !== undefined ? { index: last.index + 1 } : { key: last.key, value: String(value[last.key]) };
@@ -315,28 +333,161 @@ function opInsertChild(source, op) {
 
 // 카드 경로. 예: sections[id=s03-projects].cards[no=2]
 export const CARD_PATH = /^sections\[id=[A-Za-z0-9-]+\]\.cards\[no=\d+\]$/;
+// 카드 사진 목록(images)의 한 사진 경로. 예: sections[id=s03-projects].cards[no=2].images[1]
+export const IMAGE_ITEM_PATH = /^sections\[id=[A-Za-z0-9-]+\]\.cards\[no=\d+\]\.images\[\d+\]$/;
 // 올려 받은 사진의 주소. 개발 서버가 만드는 이름 모양과 같다.
 export const IMAGE_SRC = /^\/images\/[A-Za-z0-9._-]+\.webp$/;
 
-// 카드의 사진 주소를 바꾼다. image가 있으면 src만 바꾸고(설명 alt는 그대로), 없으면 image를 새로 만든다.
+// 카드 블록 목록(blocks)의 한 블록 경로. 예: sections[id=s03-projects].cards[no=1].blocks[2]
+export const BLOCK_PATH = /^sections\[id=[A-Za-z0-9-]+\]\.cards\[no=\d+\]\.blocks\[\d+\]$/;
+
+// 새 블록의 처음 모양. 사진 블록은 사진을 올려서 만든다. (addImage)
+const BLOCK_TEMPLATES = {
+  head: () => ({ type: "head", title: PLACEHOLDER, links: [{ label: "GitHub Repo", url: "" }] }),
+  text: () => ({ type: "text", text: [""] }),
+};
+
+// 블록 경로나 카드 경로에서 카드 경로, 블록 목록 노드, 넣을 위치(그 뒤)를 찾는다.
+// 카드 경로이면 맨 끝 뒤에 넣는다. 카드에 블록 목록이 없으면 null을 돌려준다.
+function blockTarget(source, path) {
+  const isBlock = BLOCK_PATH.test(path ?? "");
+  const cardPathText = isBlock ? path.replace(/\.blocks\[\d+\]$/, "") : path;
+  if (!CARD_PATH.test(cardPathText ?? "")) return null;
+  const { node: card } = resolve(pageOf(source), cardPathText);
+  const blocks = getProp(card, "blocks");
+  if (blocks?.type !== "ArrayExpression" || blocks.elements.length === 0) return null;
+  const after = isBlock ? Number(/\[(\d+)\]$/.exec(path)[1]) : blocks.elements.length - 1;
+  if (after >= blocks.elements.length) throw new Error(`블록이 없음: ${path}`);
+  return { cardPathText, card, blocks, after, isBlock };
+}
+
+// 블록을 하나 넣는다. kind는 head(제목줄) 또는 text(줄글)이다. path는 블록(그 뒤에) 또는 카드(맨 끝에)이다.
+function opInsertBlock(source, op) {
+  const make = BLOCK_TEMPLATES[op.kind];
+  if (!make) throw new Error("블록 종류는 head 또는 text");
+  const target = blockTarget(source, op.path);
+  if (!target) throw new Error("블록 목록(blocks)이 있는 카드가 아님");
+  const { cardPathText, blocks, after } = target;
+  return { source: insertAfterElement(source, blocks, after, make()), path: `${cardPathText}.blocks[${after + 1}]` };
+}
+
+// 사진 객체의 src 글자만 바꾼다. (설명 alt와 줄글 text는 그대로)
+function replaceSrc(source, imageNode, src) {
+  const node = getProp(imageNode, "src");
+  if (!isString(node)) throw new Error("사진에 src가 없음 (IDE에서 고쳐야 함)");
+  return { source: source.slice(0, node.start) + JSON.stringify(src) + source.slice(node.end) };
+}
+
+// 사진 주소를 바꾼다.
+//   path가 사진 목록의 한 사진(...images[n])이면 그 사진을 바꾼다.
+//   path가 카드이면: 사진 목록(images)이 있으면 첫 사진을, 없으면 image를 바꾼다. image도 없으면 image를 새로 만든다.
 function opSetImage(source, op) {
-  if (!CARD_PATH.test(op.path ?? "")) throw new Error("카드 경로가 아님");
   if (!IMAGE_SRC.test(op.src ?? "")) throw new Error("사진 주소 형식 오류");
+  // 블록 목록: 사진 블록이면 그 사진을, 카드이면 첫 사진 블록을 바꾼다.
+  if (BLOCK_PATH.test(op.path ?? "")) {
+    const { node } = resolve(pageOf(source), op.path);
+    if (!isString(getProp(node, "type")) || getProp(node, "type").value !== "image") throw new Error("사진 블록이 아님");
+    return replaceSrc(source, node, op.src);
+  }
+  const blockCard = blockTarget(source, op.path);
+  if (blockCard) {
+    const first = blockCard.blocks.elements.find((node) => isString(getProp(node, "type")) && getProp(node, "type").value === "image");
+    if (!first) throw new Error("사진 블록이 없음 (사진 추가로 만든다)");
+    return replaceSrc(source, first, op.src);
+  }
+  if (IMAGE_ITEM_PATH.test(op.path ?? "")) {
+    const { node } = resolve(pageOf(source), op.path);
+    if (node.type !== "ObjectExpression") throw new Error(`사진이 아님: ${op.path}`);
+    return replaceSrc(source, node, op.src);
+  }
+  if (!CARD_PATH.test(op.path ?? "")) throw new Error("카드 경로가 아님");
   const { node: card } = resolve(pageOf(source), op.path);
   if (card.type !== "ObjectExpression") throw new Error(`카드가 아님: ${op.path}`);
+  const images = getProp(card, "images");
+  if (images?.type === "ArrayExpression" && images.elements.length > 0) return replaceSrc(source, images.elements[0], op.src);
   const image = getProp(card, "image");
-  if (image) {
-    const src = getProp(image, "src");
-    if (isString(src)) return { source: source.slice(0, src.start) + JSON.stringify(op.src) + source.slice(src.end) };
-    throw new Error("image에 src가 없음 (IDE에서 고쳐야 함)");
-  }
+  if (image) return replaceSrc(source, image, op.src);
   const title = getProp(card, "title");
   const alt = isString(title) ? `${title.value} 사진` : "";
   const last = card.properties[card.properties.length - 1];
   const indent = lineIndent(source, last.start);
-  const text = withNewlines(`,
-${indent}image: { src: ${JSON.stringify(op.src)}, alt: ${JSON.stringify(alt)} }`, source);
+  const text = withNewlines(`,\n${indent}image: { src: ${JSON.stringify(op.src)}, alt: ${JSON.stringify(alt)} }`, source);
   return { source: source.slice(0, last.end) + text + source.slice(last.end) };
+}
+
+// 본문(body)을 첫 사진의 줄글로 옮길 수 있으면 줄글 목록을 돌려준다. 옮길 수 없으면 null이다.
+// 문자열 하나이거나 문자열만 든 배열일 때만 옮긴다. (하위 줄이 있는 항목, 구분선은 줄글이 아니므로 본문에 남긴다.)
+// 빈 글자("")는 버린다.
+function bodyAsText(body) {
+  if (!body) return [];
+  if (isString(body)) return body.value ? [body.value] : [];
+  if (body.type !== "ArrayExpression") return null;
+  if (!body.elements.every((node) => isString(node) && node.value !== "---")) return null;
+  return body.elements.map((node) => node.value).filter(Boolean);
+}
+
+// 사진을 하나 더한다. 둘째 사진부터는 인쇄에서 새 쪽에서 시작한다.
+//   path가 사진 목록의 한 사진(...images[n])이면 그 뒤에 넣는다. 카드이면 맨 끝에 넣는다.
+//   카드가 아직 예전 방식(image 한 장과 body)이면 먼저 사진 목록으로 바꾼다.
+//     image -> images[0], body(줄글로 옮길 수 있으면) -> images[0].text. 옮긴 image와 body는 지운다.
+//   새 사진의 줄글은 빈 줄글 하나([""])로 시작한다. 편집 모드에서 눌러서 쓴다.
+function opAddImage(source, op) {
+  if (!IMAGE_SRC.test(op.src ?? "")) throw new Error("사진 주소 형식 오류");
+  // 블록 목록: 사진 블록을 그 블록 뒤(카드이면 맨 끝)에 넣는다.
+  const blockCard = blockTarget(source, op.path);
+  if (blockCard) {
+    const { cardPathText, card: blockOwner, blocks, isBlock } = blockCard;
+    const ownerTitle = getProp(blockOwner, "title");
+    const isImage = (node) => isString(getProp(node, "type")) && getProp(node, "type").value === "image";
+    const count = blocks.elements.filter(isImage).length;
+    const value = { type: "image", src: op.src, alt: `${isString(ownerTitle) ? ownerTitle.value : ""} 사진 ${count + 1}`.trim() };
+    // 블록을 골랐으면 그 뒤에 넣는다. 카드를 골랐으면 마지막 사진 블록 뒤에 넣는다. 사진 블록이 없으면 맨 앞에 넣는다.
+    // (보통의 순서가 사진1, 사진2, 제목줄, 줄글이기 때문이다.)
+    let after = blockCard.after;
+    if (!isBlock) {
+      after = -1;
+      blocks.elements.forEach((node, index) => { if (isImage(node)) after = index; });
+    }
+    if (after < 0) return { source: insertBeforeFirst(source, blocks, value), path: `${cardPathText}.blocks[0]` };
+    return { source: insertAfterElement(source, blocks, after, value), path: `${cardPathText}.blocks[${after + 1}]` };
+  }
+  const itemMatch = IMAGE_ITEM_PATH.test(op.path ?? "");
+  const cardPathText = itemMatch ? op.path.replace(/\.images\[\d+\]$/, "") : op.path;
+  if (!CARD_PATH.test(cardPathText ?? "")) throw new Error("카드 경로가 아님");
+  let { node: card } = resolve(pageOf(source), cardPathText);
+  if (card.type !== "ObjectExpression") throw new Error(`카드가 아님: ${cardPathText}`);
+  const title = getProp(card, "title");
+  const titleText = isString(title) ? title.value : "";
+  const images = getProp(card, "images");
+
+  if (images?.type === "ArrayExpression" && images.elements.length > 0) {
+    const after = itemMatch ? Number(/\[(\d+)\]$/.exec(op.path)[1]) : images.elements.length - 1;
+    if (after >= images.elements.length) throw new Error(`사진이 없음: ${op.path}`);
+    const value = { src: op.src, alt: `${titleText} 사진 ${images.elements.length + 1}`.trim(), text: [""] };
+    return { source: insertAfterElement(source, images, after, value), path: `${cardPathText}.images[${after + 1}]` };
+  }
+
+  // 예전 방식 -> 사진 목록
+  const list = [];
+  const image = getProp(card, "image");
+  const moved = bodyAsText(getProp(card, "body"));
+  if (image?.type === "ObjectExpression") {
+    const src = getProp(image, "src");
+    const alt = getProp(image, "alt");
+    list.push({ src: isString(src) ? src.value : "", alt: isString(alt) ? alt.value : "", text: moved && moved.length > 0 ? moved : [""] });
+  }
+  list.push({ src: op.src, alt: `${titleText} 사진 ${list.length + 1}`.trim(), text: [""] });
+  let next = source;
+  const remove = ["image", ...(image && moved ? ["body"] : [])];
+  for (const name of remove) {
+    next = removeProp(next, card, name);
+    card = resolve(pageOf(next), cardPathText).node;
+  }
+  const last = card.properties[card.properties.length - 1];
+  if (!last) throw new Error("빈 카드에는 사진 목록을 만들지 않음");
+  const indent = lineIndent(next, last.start);
+  next = next.slice(0, last.end) + withNewlines(`,\n${indent}images: ${serialize(list, indent, true)}`, next) + next.slice(last.end);
+  return { source: next, path: `${cardPathText}.images[${list.length - 1}]` };
 }
 
 // 객체의 속성 하나를 지운 새 소스를 만든다. 속성이 자기 줄에 있으면 그 줄을 통째로 지운다.
@@ -448,6 +599,8 @@ export function applyOps(source, ops) {
     else if (op?.type === "move") outcome = opMove(current, op);
     else if (op?.type === "setImage") outcome = opSetImage(current, op);
     else if (op?.type === "initLinks") outcome = opInitLinks(current, op);
+    else if (op?.type === "addImage") outcome = opAddImage(current, op);
+    else if (op?.type === "insertBlock") outcome = opInsertBlock(current, op);
     else if (op?.type === "delete") outcome = opDelete(current, op);
     else throw new Error(`알 수 없는 작업: ${op?.type}`);
     current = outcome.source;

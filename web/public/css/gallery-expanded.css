@@ -1,7 +1,8 @@
 /* 갤러리를 펼친 모양. 세 곳에서 쓴다.
    1. 인쇄할 때 (main.html의 media="print" 링크)
    2. JavaScript가 꺼진 화면 (main.html의 noscript 링크). 이때는 타일을 눌러 모달을 열 수 없으므로 상세를 모두 펼쳐 보여준다.
-   3. 모바일 화면 (폭 768px 이하). 모달 창 대신 펼친 모양으로 보여 준다. (사용자 요청) 카드 틀 없는 문서 모양은 인쇄는 gallery-document.css, 모바일은 gallery-mobile.css이다.
+   3. 화면 (지금은 PC와 모바일 모두). 모달 창 대신 펼친 모양으로 보여 준다. (사용자 요청) 카드 틀 없는 문서 모양은 인쇄는 gallery-document.css, 화면은 gallery-mobile.css이다.
+      되돌리는 방법은 gallery-mobile.css의 머리 주석에 있다.
    격자 없이, 모든 프로젝트의 상세 내용을 순서대로 보여준다.
    모달 창의 내용은 화면에서 닫혀 있어도 이미 문서 안에 있다. 그 내용을 그대로 펼친다. */
 .gallery {

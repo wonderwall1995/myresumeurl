@@ -126,7 +126,8 @@
 }
 
 /* 빈 글자 항목(li)은 배포 화면에 나오지 않는다. 개발 서버에서도 편집을 끈 동안에는 숨겨 배포 화면과 같게 보인다. (편집을 켜면 "빈 항목"으로 보인다.) */
-html:not(.dev-edit-on) li[data-placeholder]:empty {
+html:not(.dev-edit-on) li[data-placeholder]:empty,
+html:not(.dev-edit-on) .gallery-text[data-placeholder]:empty {
   display: none;
 }
 

@@ -41,6 +41,8 @@
     body: "내용",
     sub: "하위 줄",
     links: "링크",
+    images: "사진",
+    blocks: "블록",
   };
   // 프로젝트 카드 링크 목록(links)의 최대 개수. 이보다 많으면 + 버튼이 멈춘다. (사용자 결정)
   const LINKS_MAX = 3;
@@ -131,7 +133,7 @@
     }
   }
 
-  const OP_LABEL = { initLinks: "링크 목록 만들기", insert: "항목 추가", insertChild: "하위 줄 추가", delete: "항목 삭제", move: "항목 이동", set: "글자 수정" };
+  const OP_LABEL = { insertBlock: "블록 추가", initLinks: "링크 목록 만들기", insert: "항목 추가", insertChild: "하위 줄 추가", delete: "항목 삭제", move: "항목 이동", set: "글자 수정" };
 
   async function post(url, body) {
     const response = await fetch(url, {
@@ -170,7 +172,8 @@
     return blob;
   }
 
-  async function uploadImage(path, file) {
+  // mode: "set"(그 사진을 바꿈) 또는 "add"(그 뒤에 사진을 더함). path는 카드 또는 사진 목록의 한 사진이다.
+  async function uploadImage(path, file, mode = "set") {
     if (!file.type.startsWith("image/")) {
       say("사진이 아닙니다", "이미지 파일(jpg, png, webp)을 고르세요.", "error");
       return;
@@ -178,7 +181,7 @@
     say("사진을 올리는 중", `${file.name}`);
     try {
       const blob = await toWebp(file);
-      const response = await fetch(`/__dev/edit/image?path=${encodeURIComponent(path)}`, {
+      const response = await fetch(`/__dev/edit/image?path=${encodeURIComponent(path)}&mode=${mode}`, {
         method: "POST",
         headers: { "Content-Type": "image/webp", "X-Dev-Token": token },
         body: blob,
@@ -186,7 +189,7 @@
       const result = await response.json().catch(() => ({ ok: false, error: "응답을 읽지 못함" }));
       if (typeof result.undo === "number") undoDepth = result.undo;
       if (!response.ok || !result.ok) throw new Error(result.error || `오류 ${response.status}`);
-      handoffToast("사진을 올렸습니다", `${result.src} (${Math.round(blob.size / 1024)}KB)`);
+      handoffToast(mode === "add" ? "사진을 더했습니다" : "사진을 바꿨습니다", `${result.src} (${Math.round(blob.size / 1024)}KB)`);
       say("사진을 올렸습니다", "화면을 새로 고칩니다.", "success");
     } catch (error) {
       say("사진을 올리지 못했습니다", error.message, "error");
@@ -194,7 +197,7 @@
   }
 
   // 사진 파일 선택 창을 연다. 저장하지 않은 글자 변경이 있으면 화면이 새로고침될 때 사라지므로 먼저 저장하게 한다.
-  function pickImage(path) {
+  function pickImage(path, mode = "set") {
     if (pending.size > 0) {
       say("먼저 저장하세요", "저장하지 않은 변경이 있습니다. 사진을 올리면 화면이 새로고침됩니다.", "error");
       return;
@@ -202,7 +205,7 @@
     imageInput.onchange = () => {
       const file = imageInput.files[0];
       imageInput.value = "";
-      if (file) uploadImage(path, file);
+      if (file) uploadImage(path, file, mode);
     };
     imageInput.click();
   }
@@ -476,9 +479,12 @@
   // 모달(dialog)이 열려 있으면 모달 바깥의 모든 요소는 눌리지 않는다. (브라우저가 바깥을 inert로 만든다.)
   // 저장 막대, 도구 막대, 기호 창, 알림도 화면에는 보이지만 눌리지 않는다. 그래서 모달이 열려 있는 동안에는 이 편집 도구를 모달 안으로 옮긴다.
   // 모달이 닫히면 body로 되돌린다. 옮기면 popover가 닫히므로 열려 있던 것은 다시 띄운다. 다시 띄운 popover는 맨 위 층의 맨 앞에 온다.
+  // 편집 버튼과 Inspector 버튼(개발 서버에서만 보이는 위젯)도 함께 옮긴다. 모달을 띄운 채 켜고 끌 수 있게 하기 위해서이다.
+  // 두 버튼은 position: fixed라 모달 안으로 옮겨도 화면의 같은 자리(왼쪽 아래)에 보인다.
   function raiseUi() {
     const host = document.querySelector("dialog.modal[open]") ?? document.body;
-    for (const node of [bar, tools, symbols, toast, imageInput]) {
+    const inspector = [document.querySelector(".dev-inspector-toggle"), document.querySelector(".dev-inspector-tip")];
+    for (const node of [toggle, ...inspector, bar, tools, symbols, toast, imageInput]) {
       if (!node) continue;
       const wasOpen = node.hasAttribute("popover") && node.matches(":popover-open");
       if (node.parentElement !== host) host.append(node);
@@ -494,8 +500,9 @@
     new MutationObserver((records) => {
       for (const record of records) {
         const dialog = record.target;
-        if (!(dialog instanceof HTMLDialogElement) || !enabled) continue;
-        if (!dialog.open && selected && dialog.contains(selected)) deselect();
+        if (!(dialog instanceof HTMLDialogElement) || !dialog.classList.contains("modal")) continue;
+        // 편집을 꺼 둔 동안에도 편집 버튼과 Inspector 버튼은 옮긴다.
+        if (enabled && !dialog.open && selected && dialog.contains(selected)) deselect();
         raiseUi();
       }
     }).observe(document.body, { attributes: true, attributeFilter: ["open"], subtree: true });
@@ -636,14 +643,25 @@
     // 직책 행(div.card-role-row)의 머리 칸을 누르면 그 아래에 직책 사이 구분선을 넣을 수 있다. 구분선(div.role-divider) 자신에는 넣지 않는다.
     const isRoleHead = item.classList.contains("card-box-head") && item.parentElement?.classList.contains("card-role-row");
     tools.querySelector('[data-act="child"]').hidden = !inRowList || isDivider;
-    // 사진 버튼은 프로젝트 타일(li.gallery-item)에서만 나온다.
-    tools.querySelector('[data-act="image"]').hidden = !item.classList.contains("gallery-item");
+    // 사진 버튼(교체, 추가)은 프로젝트 타일(li.gallery-item)과 사진 목록의 사진에서 나온다.
+    // 사진 목록의 한 사진(모달의 첫 사진, 둘째 사진부터의 묶음)을 고르면 그 사진을 바꾸거나 그 뒤에 사진을 더한다.
+    const isPhoto = /\.images\[\d+\]$/.test(path);
+    // 블록(card.blocks의 한 블록)을 고르면 그 뒤에 제목줄, 줄글, 사진 블록을 넣는다. 블록으로 짠 카드를 고르면 맨 끝에 넣는다.
+    const isBlock = /\.blocks\[\d+\]$/.test(path);
+    const blockCard = item.classList.contains("gallery-item-blocks");
+    const photoTarget = item.classList.contains("gallery-item") || isPhoto || isBlock;
+    tools.querySelector('[data-act="image"]').hidden = !(item.classList.contains("gallery-item") || isPhoto || item.classList.contains("gallery-block-image"));
+    tools.querySelector('[data-act="addimage"]').hidden = !photoTarget;
+    tools.querySelector('[data-act="addhead"]').hidden = !(isBlock || blockCard);
+    tools.querySelector('[data-act="addtext"]').hidden = !(isBlock || blockCard);
+    // 블록에서는 같은 종류 추가(+) 대신 위의 세 버튼을 쓴다.
+    tools.querySelector('[data-act="add"]').hidden = isBlock;
     // 링크 목록 버튼은 아직 예전 방식(저장소, 배포 두 칸)인 프로젝트 카드에서만 나온다. 이미 목록이면 링크를 눌러 + 버튼으로 늘린다.
-    tools.querySelector('[data-act="links"]').hidden = !item.classList.contains("gallery-item") || Boolean(item.querySelector(".gallery-link-item"));
+    tools.querySelector('[data-act="links"]').hidden = !item.classList.contains("gallery-item") || blockCard || Boolean(item.querySelector(".gallery-link-item"));
     tools.querySelector('[data-act="divider"]').hidden = !(inRowList || isRoleHead);
     // 기호 버튼은 서식(data-md)이 켜진 글자가 있는 항목에서만 나온다. (소제목, 직책명 같은 글자에는 기호 마커가 없다.)
     // 프로젝트 카드(li.gallery-item) 전체를 고른 경우에는 숨긴다. 카드 안 요약 글에만 적용되어 무엇이 바뀌는지 알기 어렵다. (요약 글에는 기호를 직접 입력한다.)
-    tools.querySelector('[data-act="symbol"]').hidden = !textTarget(item) || item.classList.contains("gallery-item");
+    tools.querySelector('[data-act="symbol"]').hidden = !textTarget(item) || photoTarget;
     const remove = tools.querySelector('[data-act="delete"]');
     const locked = NUMBERED.test(path);
     remove.disabled = locked;
@@ -760,7 +778,13 @@
     } else if (act === "divider") {
       structural([{ type: "insert", path, value: "---" }]);
     } else if (act === "image") {
-      pickImage(path);
+      pickImage(path, "set");
+    } else if (act === "addimage") {
+      pickImage(path, "add");
+    } else if (act === "addhead") {
+      structural([{ type: "insertBlock", path, kind: "head" }]);
+    } else if (act === "addtext") {
+      structural([{ type: "insertBlock", path, kind: "text" }]);
     } else if (act === "symbol") {
       toggleSymbols();
     } else if (act === "delete") {
@@ -793,6 +817,8 @@
     if (!on || !keepHistory) clearHistory();
     refreshBar();
     if (!on && hadHistory) say("편집을 껐습니다", "되돌리기 기록을 비웠습니다.", "success");
+    // 모달이 열린 채 켜면 저장 막대가 모달 바깥(body)에 뜬다. 모달 안으로 옮겨 누를 수 있게 한다.
+    raiseUi();
   }
 
   function makeButton(text, onClick) {
@@ -830,7 +856,10 @@
       ["child", "+ 하위", "아래에 한 단계 들여쓴 하위 줄 추가 (글자가 1pt 작음)"],
       ["divider", "구분선", "이 줄 아래에 구분선 추가"],
       ["links", "링크 목록", "저장소, 배포 링크를 이름을 붙일 수 있는 링크 목록으로 바꿉니다 (최대 3개)"],
-      ["image", "사진", "이 프로젝트의 사진 올리기 (jpg, png, webp. 자동으로 줄여 저장)"],
+      ["image", "사진 교체", "이 사진을 바꿉니다. 카드에서 누르면 첫 사진입니다. (jpg, png, webp. 자동으로 줄여 저장)"],
+      ["addhead", "+ 제목줄", "이 블록 뒤에 제목줄 블록(제목 | 링크)을 넣습니다. 카드에서 누르면 맨 끝에 넣습니다."],
+      ["addtext", "+ 줄글", "이 블록 뒤에 줄글 블록을 넣습니다. 카드에서 누르면 맨 끝에 넣습니다."],
+      ["addimage", "사진 추가", "이 사진 뒤에 사진을 하나 더합니다. 카드에서 누르면 맨 끝에 더합니다. 둘째 사진부터는 인쇄에서 새 쪽에서 시작합니다."],
       ["symbol", "기호", "줄 맨 앞의 글머리 기호 고르기 (커서가 있는 줄에 적용)"],
       ["delete", "삭제", "삭제"],
       ["parent", "상위", "상위 항목 선택"],
@@ -873,6 +902,8 @@
 
   async function init() {
     buildUi();
+    // 편집을 쓸 수 없는 경우(암호를 못 받음)에도 Inspector 버튼은 모달 위로 옮겨야 하므로 먼저 지켜본다.
+    watchDialogs();
     toggle.textContent = "편집 꺼짐";
     try {
       const response = await fetch("/__dev/edit/token");
@@ -915,7 +946,6 @@
     } catch {
       remembered = false;
     }
-    watchDialogs();
     if (remembered || new URLSearchParams(location.search).has("edit")) {
       setEnabled(true, reloaded);
       if (reloaded) reopenDialog();

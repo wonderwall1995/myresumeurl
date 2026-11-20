@@ -469,6 +469,12 @@
   font-size: var(--font-size-small);
 }
 
+/* 프로젝트 번호("PROJECT 01 / 04"). 화면의 문서 모양에서만 보인다. (gallery-mobile.css)
+   갤러리 모양(타일)과 인쇄에서는 숨긴다. 인쇄는 쪽 머리("프로젝트 01")가 번호를 보인다. */
+.gallery-number {
+  display: none;
+}
+
 /* 인쇄용 섹션 제목. 화면에서는 숨기고, 인쇄에서만 보인다. (print.css) */
 .print-heading {
   display: none;
@@ -662,7 +668,8 @@
   margin-block-end: calc(var(--space-unit) * 1.5);
 }
 
-.modal-image {
+.modal-image,
+.gallery-page-image {
   display: block;
   width: auto;
   max-width: 100%;
@@ -671,6 +678,57 @@
   margin-block-end: calc(var(--space-unit) * 2);
   border: 1px solid var(--color-text);
   border-radius: calc(var(--radius) / 3);
+}
+
+/* 사진 아래 줄글(images[n].text). 줄글 하나가 문단 하나이다. # 제목은 md-block 규칙의 제목 모양을 따른다. */
+.gallery-text-block {
+  margin-block-end: calc(var(--space-unit) * 2);
+}
+
+.gallery-text {
+  margin: 0 0 var(--space-unit);
+}
+
+/* 블록으로 짠 프로젝트(card.blocks). 블록은 쓴 순서대로 위에서 아래로 쌓인다. */
+.gallery-block + .gallery-block {
+  margin-block-start: calc(var(--space-unit) * 2);
+}
+
+/* 제목줄 블록: 제목 한 줄, 그 아래 링크 한 줄이다. 둘 다 가운데 정렬이다. (사용자 요청)
+   링크 사이는 가는 세로선이다. 링크가 많아 넘치면 링크 줄 안에서 다음 줄로 내려간다. */
+.gallery-block-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space-unit) / 2);
+  text-align: center;
+}
+
+.gallery-block-title {
+  margin: 0;
+}
+
+.modal-body .gallery-block-head .gallery-links {
+  align-self: center;
+  justify-content: center;
+  margin: 0;
+}
+
+/* 사진 블록: 사진을 가운데에 놓는다. */
+.gallery-block-image > .gallery-page-image {
+  margin-inline: auto;
+  margin-block-end: 0;
+}
+
+.gallery-block-text > .gallery-text-block {
+  margin-block-end: 0;
+}
+
+/* 둘째 사진부터의 묶음(사진 + 줄글). 화면에서는 가는 선으로 앞 내용과 나눈다. 인쇄에서는 새 쪽에서 시작한다. (print.css) */
+.gallery-page {
+  margin-block-start: calc(var(--space-unit) * 3);
+  padding-block-start: calc(var(--space-unit) * 3);
+  border-block-start: 1px solid var(--color-text);
 }
 
 /* 모달이 열려 있으면 뒤쪽 화면은 스크롤되지 않는다. */

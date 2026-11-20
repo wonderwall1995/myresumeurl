@@ -78,3 +78,18 @@
 .gallery-notice {
   display: none;
 }
+
+/* 둘째 사진부터의 사진은 첫 사진처럼 가운데에 놓는다. 줄글은 왼쪽 정렬이다. */
+.gallery-page-image {
+  margin-inline: auto;
+}
+
+/* 블록으로 짠 프로젝트: 모달 제목은 숨기고 제목줄 블록이 제목이 된다. 블록은 쓴 순서대로 나온다. 제목은 크게, 왼쪽 정렬이다. */
+.gallery-item-blocks .modal-head {
+  display: none;
+}
+
+.gallery-block-title {
+  font-size: 1.5rem;
+  line-height: 1.3;
+}

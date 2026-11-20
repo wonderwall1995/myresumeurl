@@ -218,8 +218,10 @@ async function handleEdit(request, response) {
   }
 }
 
-// 카드 사진 올리기. 본문은 webp 파일 그대로이다. 쿼리 path는 카드 경로이다. (예: sections[id=s03-projects].cards[no=2])
-// 파일을 images 폴더에 새 이름으로 저장하고, 데이터 파일의 그 카드 image.src를 새 파일로 바꾼다.
+// 카드 사진 올리기. 본문은 webp 파일 그대로이다.
+// 쿼리 path는 카드 경로(예: sections[id=s03-projects].cards[no=2]), 사진 목록의 한 사진 경로(...cards[no=2].images[1]) 또는 블록 경로(...cards[no=2].blocks[1])이다.
+// 쿼리 mode는 set(그 사진을 바꿈, 기본) 또는 add(그 뒤에 사진을 더함)이다. (dev-edit-core.mjs의 setImage, addImage)
+// 파일을 images 폴더에 새 이름으로 저장하고, 데이터 파일을 고친다.
 // 데이터 수정이 거절되면 방금 만든 파일을 지운다. 이전 사진 파일은 지우지 않는다.
 const IMAGE_MAX = 1500000;
 const imagesDir = join(dirname(dirname(dirname(editFile))), "images");
@@ -240,23 +242,25 @@ async function handleImage(request, response, url) {
   const cardPath = url.searchParams.get("path") ?? "";
   let file = "";
   try {
-    const { applyOps, CARD_PATH } = await loadEditCore();
-    if (!CARD_PATH.test(cardPath)) throw new Error("카드 경로가 아님");
+    const { applyOps, CARD_PATH, IMAGE_ITEM_PATH, BLOCK_PATH } = await loadEditCore();
+    if (![CARD_PATH, IMAGE_ITEM_PATH, BLOCK_PATH].some((pattern) => pattern.test(cardPath))) throw new Error("카드, 사진, 블록 경로가 아님");
+    const mode = url.searchParams.get("mode") ?? "set";
+    if (mode !== "set" && mode !== "add") throw new Error("mode는 set 또는 add");
     const isWebp = body.length > 12 && body.toString("latin1", 0, 4) === "RIFF" && body.toString("latin1", 8, 12) === "WEBP";
     if (!isWebp) throw new Error("webp 사진이 아님");
-    const no = /\[no=(\d+)\]$/.exec(cardPath)[1];
+    const no = /\.cards\[no=(\d+)\]/.exec(cardPath)[1];
     const name = `project-${no}-${Date.now()}.webp`;
     file = join(imagesDir, name);
     if (existsSync(file)) throw new Error("같은 이름의 파일이 이미 있음");
     writeFileSync(file, body);
     const source = readFileSync(editFile, "utf8");
-    const result = applyOps(source, [{ type: "setImage", path: cardPath, src: `/images/${name}` }]);
+    const result = applyOps(source, [{ type: mode === "add" ? "addImage" : "setImage", path: cardPath, src: `/images/${name}` }]);
     if (result.source !== source) {
       writeData(result.source);
       undoStack.push({ before: source, after: result.source });
       if (undoStack.length > UNDO_MAX) undoStack.shift();
     }
-    log("편집", `사진 저장 ${name} (${Math.round(body.length / 1024)}KB) -> ${cardPath}`);
+    log("편집", `사진 ${mode === "add" ? "추가" : "교체"} ${name} (${Math.round(body.length / 1024)}KB) -> ${cardPath}`);
     return reply(200, { ok: true, src: `/images/${name}`, undo: undoStack.length });
   } catch (error) {
     if (file && existsSync(file)) unlinkSync(file);
