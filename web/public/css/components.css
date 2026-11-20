@@ -686,7 +686,24 @@
 }
 
 .gallery-text {
+  /* 문단의 기본 최대 폭(72ch, base.css)을 풀어 줄글 블록의 오른쪽 끝까지 쓴다. (사용자 요청) */
+  max-width: none;
   margin: 0 0 var(--space-unit);
+  /* 글자 크기는 인쇄와 같은 10pt(13.33px)이다. 값은 tokens.css의 --gallery-text-size. */
+  font-size: var(--gallery-text-size);
+}
+
+/* 줄글 안의 # 제목은 줄글 크기의 배수로 정한다. 인쇄(줄글 = 1rem)와 같은 비율이다. (1.5배, 1.25배, 1.0625배) */
+.gallery-text .md-h1 {
+  font-size: 1.5em;
+}
+
+.gallery-text .md-h2 {
+  font-size: 1.25em;
+}
+
+.gallery-text .md-h3 {
+  font-size: 1.0625em;
 }
 
 /* 블록으로 짠 프로젝트(card.blocks). 블록은 쓴 순서대로 위에서 아래로 쌓인다. */
@@ -722,6 +739,15 @@
 
 .gallery-block-text > .gallery-text-block {
   margin-block-end: 0;
+}
+
+/* 줄글 문단마다 왼쪽에 세로선을 긋는다. (사용자 요청)
+   선은 문단 하나의 높이만큼이고, 문단 사이의 간격(margin)에서는 끊긴다. 그래서 문단이 바뀌는 곳이 선으로 드러난다.
+   화면과 인쇄 모두 같다. 흑백 인쇄에서도 보이도록 검정 실선이다. */
+.gallery-block-text .gallery-text {
+  padding-inline-start: calc(var(--space-unit) * 1.5);
+  /* 굵기 2px (사용자 비교 요청. 이전 값 1px) */
+  border-inline-start: 2px solid var(--color-text);
 }
 
 /* 둘째 사진부터의 묶음(사진 + 줄글). 화면에서는 가는 선으로 앞 내용과 나눈다. 인쇄에서는 새 쪽에서 시작한다. (print.css) */
@@ -946,6 +972,11 @@ body:has(.modal[open]) {
 @media screen and (max-width: 768px) {
   html {
     font-size: 68.75%;
+  }
+
+  /* 모바일의 프로젝트 줄글은 다른 글자와 같이 글자 크기 버튼을 따른다. (PC와 인쇄는 10pt 고정, tokens.css) */
+  :root {
+    --gallery-text-size: 1rem;
   }
 
   html[data-text-size="-6"] {

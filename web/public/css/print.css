@@ -128,6 +128,17 @@ html {
   break-inside: avoid;
 }
 
+/* 세로 용지(A4 세로)에서는 한 쪽에 사진 2장이 들어가게 높이 상한을 115mm로 낮춘다. (사용자 요청)
+   쪽 높이 273mm = 쪽 머리(약 16mm) + 사진 115mm x 2 + 사진 사이 간격, 그리고 남는 여유이다. 3:2 사진은 폭 약 172mm가 된다.
+   가로 용지에서는 위의 150mm 그대로이며, 쪽 높이(186mm) 때문에 한 쪽에 사진 1장이 들어간다.
+   (용지 방향은 인쇄 창과 저장용 PDF가 정한다. 이 조건은 그 쪽 방향을 따른다.) */
+@media (orientation: portrait) {
+  .modal-image,
+  .gallery-page-image {
+    max-height: 115mm;
+  }
+}
+
 /* 위젯 묶음(인쇄 버튼, 글자 크기 버튼, 안내 문구)은 종이에 나오지 않는다. */
 .widget-stack {
   display: none;
