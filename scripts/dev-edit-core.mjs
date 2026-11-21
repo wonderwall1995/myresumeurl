@@ -253,6 +253,15 @@ function nextNumber(container) {
 
 // 구분선 항목의 글자. 화면 코드(common/section-parts.js)의 DIVIDER와 같아야 한다.
 const DIVIDER = "---";
+// 인쇄 쪽 나눔 표식의 글자. 화면 코드(common/section-parts.js)의 PAGE_BREAK와 같아야 한다.
+const PAGE_BREAK = "===";
+const isMarker = (node) => isString(node) && (node.value === DIVIDER || node.value === PAGE_BREAK);
+
+// 쪽 나눔 표식을 넣을 수 있는 배열인가. 번호나 이름표(no, id)가 있는 항목(카드, 섹션)의 배열이 아니면 된다.
+// 경력의 직책(roles)과 묶음(groups), 글머리 목록, 소개 단락, 프로젝트 블록(blocks)과 줄글(text)이 여기에 든다.
+function allowsPageBreak(container) {
+  return container.elements.every((node) => !(getProp(node, "no") || getProp(node, "id")));
+}
 
 // 구분선과 하위 줄을 넣을 수 있는 목록의 항목인가. 글자이거나, text가 글자이고 label과 번호(no, id)가 없는 객체이다.
 function isListItemNode(node) {
@@ -270,7 +279,7 @@ function isRoleNode(node) {
 // 구분선을 넣을 수 있는 배열인가. 글자 목록(항목, 구분선)이거나 직책 행 목록(직책, 구분선)이다. 둘이 섞인 배열은 아니다.
 function allowsDivider(container) {
   const elements = container.elements;
-  return elements.every(isListItemNode) || elements.every((node) => isRoleNode(node) || (isString(node) && node.value === DIVIDER));
+  return elements.every(isListItemNode) || elements.every((node) => isRoleNode(node) || isMarker(node));
 }
 
 // 경로가 하위 줄(...sub[n])을 가리키는가. 하위 줄은 한 단계만 허용한다.
@@ -280,15 +289,20 @@ function opInsert(source, op) {
   const { node, container, index, steps } = resolve(pageOf(source), op.path);
   if (!container) throw new Error(`배열 항목이 아닌 위치: ${op.path}`);
   if (op.value !== undefined) {
-    // 값을 주면 견본 글자 대신 그 값을 넣는다. 넣을 수 있는 값은 구분선뿐이다.
-    if (op.value !== DIVIDER) throw new Error("넣을 수 있는 값은 구분선(---)뿐");
+    // 값을 주면 견본 글자 대신 그 값을 넣는다. 넣을 수 있는 값은 구분선과 인쇄 쪽 나눔 표식뿐이다.
+    if (op.value === PAGE_BREAK) {
+      if (isSubPath(steps)) throw new Error("하위 줄에는 쪽 나눔을 넣지 않음");
+      if (!allowsPageBreak(container)) throw new Error("쪽 나눔을 넣을 수 없는 목록 (카드, 섹션 목록)");
+      return { source: insertAfterElement(source, container, index, PAGE_BREAK), path: withLastStep(op.path, { index: index + 1 }) };
+    }
+    if (op.value !== DIVIDER) throw new Error("넣을 수 있는 값은 구분선(---)과 쪽 나눔(===)뿐");
     if (isSubPath(steps)) throw new Error("하위 줄에는 구분선을 넣지 않음");
     if (!allowsDivider(container)) throw new Error("구분선을 넣을 수 없는 목록");
     return { source: insertAfterElement(source, container, index, DIVIDER), path: withLastStep(op.path, { index: index + 1 }) };
   }
   // 직책 행 목록에서 구분선을 눌러 "+"를 하면 글자 "새 글자"가 아니라 가까운 직책의 모양을 따른 새 직책을 넣는다.
   const isRoleList = container.elements.some(isRoleNode);
-  if (isRoleList && isString(node) && node.value === DIVIDER) {
+  if (isRoleList && isMarker(node)) {
     const before = container.elements.slice(0, index).reverse().find(isRoleNode);
     const template = before ?? container.elements.find(isRoleNode);
     const value = blank(toValue(template));
@@ -315,7 +329,7 @@ function opInsertChild(source, op) {
   if (!container) throw new Error(`배열 항목이 아닌 위치: ${op.path}`);
   if (isSubPath(steps)) throw new Error("하위 줄에는 하위 줄을 만들지 않음 (한 단계만)");
   if (!isListItemNode(node)) throw new Error("하위 줄을 만들 수 없는 항목");
-  if (isString(node) && node.value === DIVIDER) throw new Error("구분선에는 하위 줄을 만들지 않음");
+  if (isMarker(node)) throw new Error("구분선과 쪽 나눔에는 하위 줄을 만들지 않음");
   const replaceNode = (value) => ({
     source: source.slice(0, node.start) + serialize(value, "", false) + source.slice(node.end),
     path: `${op.path}.sub[0]`,

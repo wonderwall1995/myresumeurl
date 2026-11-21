@@ -43,6 +43,18 @@ html {
   margin-block-end: 1rem;
 }
 
+/* 인쇄 쪽 나눔 표식(데이터의 글자 "==="). 표식 다음 내용은 새 쪽에서 시작한다. 표식 자체는 높이가 없다. (사용자 요청)
+   편집 모드에서 넣고 지운다. */
+.print-break {
+  display: block;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  list-style: none;
+  break-before: page;
+}
+
 /* Worklist 제목은 아래 내용과 쪽이 갈라지지 않게 한다. (제목만 쪽 끝에 남지 않게 한다.) */
 .career-worklist-heading {
   break-after: avoid;

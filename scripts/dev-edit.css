@@ -423,3 +423,29 @@ html:not(.dev-edit-on) .gallery-text[data-placeholder]:empty {
     box-shadow: none !important;
   }
 }
+
+/* 인쇄 쪽 나눔 표식. 편집을 켰을 때만 점선과 이름표로 보인다. 눌러서 선택하면 이동하거나 삭제한다.
+   화면에서 눌리기 쉽도록 높이를 두고, 가운데에 점선을 긋는다. 화면에서만 쓴다(@media screen). 개발 서버에서 인쇄하면 print.css의 쪽 나눔이 그대로 동작한다. */
+@media screen {
+  .dev-edit-on .print-break {
+    display: block;
+    position: relative;
+    height: 18px;
+    margin: 6px 0;
+    list-style: none;
+    background: linear-gradient(to right, #b45309 50%, transparent 0) center / 10px 2px repeat-x;
+    cursor: pointer;
+  }
+
+  .dev-edit-on .print-break::after {
+    content: "인쇄: 여기서 다음 쪽으로";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    padding: 0 6px;
+    background: #ffffff;
+    color: #b45309;
+    font: 11px/1.4 ui-monospace, Consolas, monospace;
+  }
+}

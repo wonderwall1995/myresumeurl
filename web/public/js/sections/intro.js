@@ -1,7 +1,7 @@
 import { el } from "../lib/dom.js";
 import { partId, testAttr } from "../lib/ids.js";
 import { itemPath, sectionPath } from "../lib/edit-path.js";
-import { createList, renderHeading } from "../common/section-parts.js";
+import { createList, createPageBreak, PAGE_BREAK, renderHeading } from "../common/section-parts.js";
 
 // 소개 섹션을 그린다. 본문이 없으면 아무것도 그리지 않는다.
 // data.text는 문자열 하나이거나 블록 배열이다.
@@ -17,7 +17,10 @@ export function renderIntro(root, data) {
     const id = Array.isArray(text) ? partId(data.id, `text-b${index + 1}`) : partId(data.id, "text");
     // 블록 배열이면 블록이 배열의 한 항목이다. 문자열 하나면 항목이 아니다.
     const path = Array.isArray(text) ? itemPath(base, index) : base;
-    if (Array.isArray(block)) {
+    if (Array.isArray(text) && block === PAGE_BREAK) {
+      // 단락 사이의 인쇄 쪽 나눔 표식 (글자 "===")
+      root.append(createPageBreak(partId(id, "break"), path));
+    } else if (Array.isArray(block)) {
       const list = createList(block, id, "intro-list", path, path);
       if (list) root.append(list);
     } else if (block) {

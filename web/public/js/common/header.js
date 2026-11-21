@@ -1,6 +1,7 @@
 import { el } from "../lib/dom.js";
 import { itemId, partId, testAttr } from "../lib/ids.js";
 import { itemPath } from "../lib/edit-path.js";
+import { createPageBreak, PAGE_BREAK } from "./section-parts.js";
 
 // 사진 자리. 사진 파일이 없어도 자리를 만든다.
 // 자리는 머리말 줄의 왼쪽에 놓인다. 모양은 CSS가 정한다.
@@ -64,6 +65,11 @@ function createAbout(about, id) {
   if (about.heading) nodes.push(el("h2", { text: about.heading, attrs: testAttr(partId(aboutId, "heading")), edit: "header.about.heading" }));
   blocks.forEach((block, index) => {
     const path = itemPath("header.about.text", index);
+    // 단락 사이의 인쇄 쪽 나눔 표식 (글자 "===")
+    if (block === PAGE_BREAK) {
+      nodes.push(createPageBreak(partId(aboutId, `break${index + 1}`), path));
+      return;
+    }
     nodes.push(el("p", { text: String(block), className: "about-text", attrs: testAttr(partId(aboutId, `text-b${index + 1}`)), edit: path, editItem: path, md: "block" }));
   });
   return el("div", { className: "header-about", attrs: testAttr(aboutId) }, nodes);

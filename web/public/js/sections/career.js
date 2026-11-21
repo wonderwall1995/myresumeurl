@@ -21,7 +21,7 @@ import { el } from "../lib/dom.js";
 import { partId, testAttr } from "../lib/ids.js";
 import { cardPath, itemPath, sectionPath } from "../lib/edit-path.js";
 import { box, renderCards } from "../common/card.js";
-import { createBody, createList, DIVIDER, renderHeading } from "../common/section-parts.js";
+import { createBody, createList, createPageBreak, DIVIDER, PAGE_BREAK, renderHeading } from "../common/section-parts.js";
 
 // 기업명과 직책명을 제목(h3) 하나에 담는다. 두 값 사이에 공백을 둔다.
 // baseId는 이름표의 앞부분이다. p는 카드의 편집 경로이다.
@@ -62,6 +62,11 @@ function createGroups(stage, stageId, rp) {
   (stage.groups ?? []).forEach((group, index) => {
     const groupId = partId(stageId, `g${index + 1}`);
     const gp = itemPath(`${rp}.groups`, index);
+    // 묶음 사이의 인쇄 쪽 나눔 표식 (글자 "===")
+    if (group === PAGE_BREAK) {
+      nodes.push(createPageBreak(partId(groupId, "break"), gp));
+      return;
+    }
     if (group.label) {
       nodes.push(el("p", { text: group.label, className: "card-group-label", attrs: testAttr(partId(groupId, "label")), edit: `${gp}.label`, editItem: gp }));
     }
@@ -88,6 +93,11 @@ function buildRoles(card, id, p) {
   let dividerCount = 0;
   card.roles.forEach((stage, index) => {
     const rp = itemPath(`${p}.roles`, index);
+    // 글자 "==="는 직책 행 사이의 인쇄 쪽 나눔 표식이다. 화면에는 보이지 않는다. 직책 번호(r1, r2)를 세지 않는다.
+    if (stage === PAGE_BREAK) {
+      boxes.push(createPageBreak(partId(id, `break${index + 1}`), rp));
+      return;
+    }
     // 글자 "---"는 직책 행 사이의 구분선이다. 행 전체 폭의 검정 1px 선이다. (예: QA Manager 시절과 QA Lead 시절을 나눈다.)
     if (stage === DIVIDER) {
       dividerCount += 1;
@@ -157,6 +167,7 @@ function renderFocus(root, data) {
     const blockId = isArray ? partId(id, `text-b${index + 1}`) : partId(id, "text");
     // 블록 배열이면 블록이 배열의 한 항목이다. 문자열 하나면 항목이 아니다.
     const path = isArray ? itemPath(`${fp}.text`, index) : `${fp}.text`;
+    if (isArray && block === PAGE_BREAK) return createPageBreak(partId(blockId, "break"), path);
     if (Array.isArray(block)) return createList(block, blockId, "focus-list", path, path);
     if (!block) return null;
     return el("p", { text: String(block), className: "focus-text", attrs: testAttr(blockId), edit: path, editItem: isArray ? path : undefined, md: "block" });

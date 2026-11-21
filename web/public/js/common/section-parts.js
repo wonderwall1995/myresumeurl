@@ -12,6 +12,16 @@ export function renderHeading(root, data) {
 // 구분선 항목의 글자. 항목 글자가 정확히 이것이면 글자 대신 가는 선으로 보인다. (태그 목록 제외)
 export const DIVIDER = "---";
 
+// 인쇄 쪽 나눔 표식의 글자. 목록에서 항목 글자가 정확히 이것이면 그 자리에서 인쇄가 다음 쪽으로 넘어간다.
+// 화면에는 보이지 않고, 개발 서버의 편집 모드에서만 점선으로 보인다. (CSS .print-break, scripts/dev-edit.css)
+// 경력의 직책 사이와 묶음 사이, 글머리 목록, 소개와 About me의 단락, 관심 분야 글, 프로젝트의 블록과 줄글에 넣을 수 있다.
+export const PAGE_BREAK = "===";
+
+// 쪽 나눔 표식 요소를 만든다. 목록(ul) 안이면 tag를 "li"로 준다. path는 표식의 편집 경로(배열 항목)이다.
+export function createPageBreak(id, path, tag = "div") {
+  return el(tag, { className: "print-break", attrs: { "aria-hidden": "true", ...testAttr(id) }, editItem: path });
+}
+
 // 하위 줄이 있는 항목 하나. 항목은 { text, sub: ["글자", ...] } 객체이다. 하위 줄은 한 단계만 있다.
 // li는 항목 전체이고(editItem), 글자는 안쪽 span(edit)이다. 편집기가 글자 요소의 내용을 통째로 바꾸므로 하위 목록(ul)과 섞이면 안 된다.
 // 이름표: 항목 <id>-i3, 글자 <id>-i3-text, 하위 목록 <id>-i3-sub, 하위 줄 <id>-i3-s1
@@ -45,6 +55,7 @@ export function createList(items, id, className, editBase, listItem) {
     const liId = itemId(id, index);
     if (!isTag && item !== null && typeof item === "object") return createItemWithSub(item, liId, path);
     const text = String(item);
+    if (!isTag && text === PAGE_BREAK) return createPageBreak(partId(liId, "break"), path, "li");
     if (!isTag && text === DIVIDER) {
       return el("li", { text, className: "item-divider", attrs: { ...testAttr(liId), role: "separator" }, edit: path, editItem: path });
     }

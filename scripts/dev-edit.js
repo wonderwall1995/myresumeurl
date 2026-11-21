@@ -662,6 +662,18 @@
     // 기호 버튼은 서식(data-md)이 켜진 글자가 있는 항목에서만 나온다. (소제목, 직책명 같은 글자에는 기호 마커가 없다.)
     // 프로젝트 카드(li.gallery-item) 전체를 고른 경우에는 숨긴다. 카드 안 요약 글에만 적용되어 무엇이 바뀌는지 알기 어렵다. (요약 글에는 기호를 직접 입력한다.)
     tools.querySelector('[data-act="symbol"]').hidden = !textTarget(item) || photoTarget;
+    // 인쇄 쪽 나눔(끊기): 목록의 항목 뒤에 표식("===")을 넣는다. 인쇄에서 표식 다음 내용이 새 쪽에서 시작한다.
+    // 카드, 섹션, 하위 줄, 링크, 스킬 태그, 연락처, 관심 분야 묶음에는 넣지 않는다.
+    const isBreak = item.classList.contains("print-break");
+    const canBreak = /\[\d+\]$/.test(path) && !NUMBERED.test(path) && !/\.(sub|links|images|skills|contact)\[\d+\]$/.test(path) && !/interests\.groups\[\d+\]$/.test(path);
+    tools.querySelector('[data-act="pagebreak"]').hidden = !canBreak || isBreak;
+    if (isBreak) {
+      // 표식 자신은 이동(▲▼)과 삭제만 한다.
+      tools.querySelector(".dev-edit-tools-label").textContent = "쪽 나눔";
+      for (const act of ["add", "child", "divider", "symbol", "image", "addimage", "addhead", "addtext", "links"]) {
+        tools.querySelector(`[data-act="${act}"]`).hidden = true;
+      }
+    }
     const remove = tools.querySelector('[data-act="delete"]');
     const locked = NUMBERED.test(path);
     remove.disabled = locked;
@@ -781,6 +793,8 @@
       pickImage(path, "set");
     } else if (act === "addimage") {
       pickImage(path, "add");
+    } else if (act === "pagebreak") {
+      structural([{ type: "insert", path, value: "===" }]);
     } else if (act === "addhead") {
       structural([{ type: "insertBlock", path, kind: "head" }]);
     } else if (act === "addtext") {
@@ -855,6 +869,7 @@
       ["add", "+", "아래에 같은 종류 추가"],
       ["child", "+ 하위", "아래에 한 단계 들여쓴 하위 줄 추가 (글자가 1pt 작음)"],
       ["divider", "구분선", "이 줄 아래에 구분선 추가"],
+      ["pagebreak", "끊기", "인쇄할 때 이 항목 다음부터 새 쪽에서 시작합니다. 편집 모드에서만 점선으로 보이고, 눌러서 삭제할 수 있습니다."],
       ["links", "링크 목록", "저장소, 배포 링크를 이름을 붙일 수 있는 링크 목록으로 바꿉니다 (최대 3개)"],
       ["image", "사진 교체", "이 사진을 바꿉니다. 카드에서 누르면 첫 사진입니다. (jpg, png, webp. 자동으로 줄여 저장)"],
       ["addhead", "+ 제목줄", "이 블록 뒤에 제목줄 블록(제목 | 링크)을 넣습니다. 카드에서 누르면 맨 끝에 넣습니다."],
