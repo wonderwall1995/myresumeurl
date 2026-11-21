@@ -23,7 +23,7 @@ import { partId, testAttr } from "../lib/ids.js";
 import { cardPath, sectionPath } from "../lib/edit-path.js";
 import { eachCard } from "../common/card.js";
 import { createModal } from "../common/modal.js";
-import { createBody, createPageBreak, PAGE_BREAK, renderHeading } from "../common/section-parts.js";
+import { createBody, createPageBreak, createSplitText, PAGE_BREAK, renderHeading } from "../common/section-parts.js";
 
 // 사진 요소를 만든다. 사진이 없으면 null을 반환한다.
 // editItem은 사진 목록(images)의 한 항목일 때 그 경로이다. 편집 모드에서 사진을 누르면 그 사진이 선택된다.
@@ -49,13 +49,13 @@ function createImageText(text, id, editBase) {
     const path = Array.isArray(text) ? `${editBase}[${index}]` : editBase;
     // 줄글 문단 사이의 인쇄 쪽 나눔 표식 (글자 "===")
     if (Array.isArray(text) && raw === PAGE_BREAK) return createPageBreak(partId(id, `break${index + 1}`), path);
-    return el("p", {
+    // 줄글 문단은 두 칸(소제목 | 줄글)으로 보여 준다. (common/section-parts.js createSplitText)
+    return createSplitText({
       text: raw,
-      className: "gallery-text",
-      attrs: testAttr(partId(id, `t${index + 1}`)),
-      edit: path,
+      id: partId(id, `t${index + 1}`),
+      editPath: path,
       editItem: Array.isArray(text) ? path : undefined,
-      md: "block",
+      rawClass: "gallery-text",
       placeholder: raw ? undefined : "줄글 (# 제목, ## 소제목, ### 작은 제목 가능)",
     });
   }).filter(Boolean);

@@ -2,6 +2,7 @@
 import { el, isEditMode } from "../lib/dom.js";
 import { itemId, partId, testAttr } from "../lib/ids.js";
 import { itemPath, sectionPath } from "../lib/edit-path.js";
+import { renderMarkdown } from "../lib/markdown.js";
 
 // 섹션 제목 (h2). 제목이 없으면 아무것도 그리지 않는다.
 export function renderHeading(root, data) {
@@ -81,4 +82,62 @@ export function createBody(body, id, editPath) {
   if (Array.isArray(body)) return createList(body, id, undefined, editPath);
   if (typeof body === "string" && body) return el("p", { text: body, attrs: testAttr(id), edit: editPath, md: "block" });
   return null;
+}
+
+// ---------- 두 칸 줄글 (소제목 | 줄글) ----------
+// 자기소개 단락과 프로젝트 줄글을 경력 칸처럼 두 칸으로 보여 준다. (사용자 요청, 실험)
+// 데이터는 바꾸지 않는다. 단락의 줄 중에서 제목 줄(# 제목, ## 제목, ### 제목) 또는 대괄호를 감싼 굵은 글자 한 줄(**[직무상 소개]**)을
+// 소제목으로 보고 왼쪽 칸에 놓는다. 그다음 줄부터 다음 소제목 전까지가 오른쪽 칸의 줄글이다.
+// 대괄호가 없는 굵은 글자 한 줄은 강조 문장이므로 줄글에 남는다. (긴 강조 문장이 좁은 왼쪽 칸에 들어가던 문제를 막는다.)
+// 소제목이 여러 개면(Keep, Problem, Try) 소제목마다 행을 나눈다. 첫 소제목 앞의 줄은 왼쪽 칸이 빈 행이 된다.
+const LABEL_LINE = /^(?:#{1,3} (.+)|\*\*(\[[^*]*\])\*\*)$/;
+
+export function splitRows(text) {
+  const rows = [];
+  let current = null;
+  for (const line of String(text).split("\n")) {
+    const match = LABEL_LINE.exec(line.trim());
+    if (match) {
+      current = { label: (match[1] ?? match[2]).trim(), body: [] };
+      rows.push(current);
+      continue;
+    }
+    if (!current) {
+      current = { label: "", body: [] };
+      rows.push(current);
+    }
+    current.body.push(line);
+  }
+  // 행 앞뒤의 빈 줄은 지운다. (단락 사이 간격은 CSS가 정한다.)
+  for (const row of rows) {
+    while (row.body.length > 0 && !row.body[0].trim()) row.body.shift();
+    while (row.body.length > 0 && !row.body[row.body.length - 1].trim()) row.body.pop();
+  }
+  return rows.filter((row) => row.label || row.body.length > 0);
+}
+
+// 두 칸 줄글 하나(단락 하나)를 만든다.
+//   text: 원본 글자. id: 이름표. editPath: 글자의 편집 경로. editItem: 배열 항목이면 그 경로(이동, 삭제, 끊기 단위).
+//   rawClass: 편집 칸(p)의 클래스. 편집 모드에서 원본 글자를 고치는 칸의 모양이다.
+// 화면과 인쇄에는 두 칸 모양(div.split-view)만 나온다.
+// 개발 서버에서는 원본 글자 칸(p.split-raw)도 함께 만든다. 편집을 켜면 두 칸 모양을 숨기고 이 칸을 보여 준다. (scripts/dev-edit.css)
+// 이름표: 단락 <id>, 행 <id>-row1, 소제목 <id>-row1-head, 줄글 <id>-row1-body, 편집 칸 <id>-raw
+export function createSplitText({ text, id, editPath, editItem, rawClass, placeholder }) {
+  const raw = String(text ?? "");
+  const rows = splitRows(raw).map((row, index) => {
+    const rowId = partId(id, `row${index + 1}`);
+    const body = el("div", { className: "text-row-body md-block", attrs: testAttr(partId(rowId, "body")) });
+    // 화면 모양은 편집 모드와 상관없이 굵게와 제목을 해석해서 보여 준다.
+    if (row.body.length > 0) body.append(...renderMarkdown(row.body.join("\n"), "block"));
+    return el("div", { className: "text-row", attrs: testAttr(rowId) }, [
+      el("div", { text: row.label, className: "text-row-head", attrs: testAttr(partId(rowId, "head")) }),
+      body,
+    ]);
+  });
+  const view = rows.length > 0 ? el("div", { className: "split-view" }, rows) : null;
+  const rawBox = isEditMode()
+    ? el("p", { text: raw, className: `${rawClass} split-raw`, attrs: testAttr(partId(id, "raw")), edit: editPath, md: "block", placeholder })
+    : null;
+  if (!view && !rawBox) return null;
+  return el("div", { className: "split-text", attrs: testAttr(id), editItem }, [view, rawBox].filter(Boolean));
 }

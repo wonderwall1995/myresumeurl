@@ -109,6 +109,81 @@
   white-space: pre-line;
 }
 
+/* 두 칸 줄글 (소제목 | 줄글). 자기소개 단락과 프로젝트 줄글에 쓴다. (사용자 요청, 실험. js/common/section-parts.js createSplitText)
+   왼쪽 칸은 소제목, 오른쪽 칸은 줄글이다. 왼쪽 칸 폭은 경력 직책 칸의 75%이다. (--split-head-width, 사용자 요청)
+   줄글 왼쪽에 2px 세로선을 긋는다. 행(소제목)마다 선이 끊긴다. 오른쪽 끝에도 여백을 두어 글이 좌우로 꽉 차지 않게 한다.
+   좁은 화면(36rem 이하)에서는 소제목을 위에, 줄글을 아래에 쌓는다. */
+.split-text {
+  margin: 0 0 calc(var(--space-unit) * 3);
+  padding-inline: var(--section-text-padding) calc(var(--space-unit) * 4);
+}
+
+/* 원본 글자 칸은 개발 서버의 편집 모드에서만 보인다. (scripts/dev-edit.css) 배포 화면에는 이 칸이 없다. */
+.split-raw {
+  display: none;
+}
+
+.text-row {
+  display: grid;
+  grid-template-columns: var(--split-head-width) minmax(0, 1fr);
+  column-gap: calc(var(--space-unit) * 3);
+}
+
+.text-row + .text-row {
+  margin-block-start: calc(var(--space-unit) * 2);
+}
+
+.text-row-head {
+  /* 경력 왼쪽 칸 소제목 크기(본문 - 1px)에서 2pt 키웠다. (사용자 요청) */
+  font-size: calc(var(--font-size-body) - 1px + 2pt);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body);
+  overflow-wrap: anywhere;
+}
+
+.text-row-body {
+  min-width: 0;
+  padding-inline-start: calc(var(--space-unit) * 1.5);
+  border-inline-start: 2px solid var(--color-text);
+}
+
+/* 소제목만 있고 줄글이 없는 행(예: "## 코드 = ...")은 세로선을 긋지 않는다. */
+.text-row-body:empty {
+  border-inline-start: 0;
+}
+
+@media (max-width: 36rem) {
+  .split-text {
+    padding-inline: var(--section-text-padding);
+  }
+
+  .text-row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: calc(var(--space-unit) / 2);
+  }
+}
+
+/* 프로젝트 줄글의 두 칸: 줄글 글자 크기는 --gallery-text-size이고 안의 # 제목은 그 배수이다. 줄글 블록의 바깥 세로선은 쓰지 않는다. */
+.gallery-block-text .text-row-body {
+  font-size: var(--gallery-text-size);
+}
+
+.gallery-block-text .text-row-body .md-h1 {
+  font-size: 1.5em;
+}
+
+.gallery-block-text .text-row-body .md-h2 {
+  font-size: 1.25em;
+}
+
+.gallery-block-text .text-row-body .md-h3 {
+  font-size: 1.0625em;
+}
+
+.gallery-block-text .split-text {
+  padding-inline: 0 calc(var(--space-unit) * 4);
+}
+
 /* 소개의 글머리 목록. 본문과 같은 최대 폭이고 왼쪽 정렬이다. */
 .intro-list {
   max-width: var(--intro-max-width);

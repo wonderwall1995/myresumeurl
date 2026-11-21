@@ -56,6 +56,8 @@
   --section-text-padding: 10px;
   /* 경력의 직책 행에서 왼쪽 칸(직책명, 근속기간)의 폭. 오른쪽 내용과의 간격을 줄이고 인쇄의 줄바꿈을 줄이려고 11rem에서 9rem으로 줄였다. (사용자 요청) */
   --role-column-width: 9rem;
+  /* 두 칸 줄글(자기소개, 프로젝트 줄글)의 왼쪽 소제목 칸 폭. 경력 칸(9rem, FHD 144px)의 75%이다. (사용자 요청) FHD 108px. */
+  --split-head-width: calc(var(--role-column-width) * 0.75);
   /* 경력의 직책 행 사이 간격의 절반. 앞 행 아래 여백과 다음 행 위 여백이 각각 이 값이다. 구분선이 있으면 선 위와 아래가 각각 이 값이다.
      원래 값(3단위 + 본문 한 줄)의 72%이다. 인쇄는 print.css가 pt로 다시 정한다. */
   --role-row-gap: calc((var(--space-unit) * 3 + var(--line-height-body) * 1rem) * 0.72);
