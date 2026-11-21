@@ -355,6 +355,13 @@
   list-style: none;
 }
 
+/* 웹 이력서 링크(header.resumeLink). 연락처 목록 위(사진 오른쪽 칸의 맨 위)에 한 줄로 놓인다. 연락처와 종류가 달라 따로 둔다.
+   글자는 연락처보다 2pt 크다. (사용자 요청) 화면과 인쇄 모두 같다. 아래의 연락처 목록과는 조금 띄운다. */
+.resume-link {
+  margin: 0 0 calc(var(--space-unit) / 2);
+  font-size: calc(1em + 2pt);
+}
+
 /* 머리말 영역
    위에서 아래로: 이름(h1, 전체 폭), 그 아래 카드 하나. 카드 안에 한 줄로 | 사진 | 연락처 |.
    테두리는 없다. 위아래 안쪽 여백은 --header-row-padding, 좌우는 --header-row-padding-inline이다.

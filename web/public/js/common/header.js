@@ -46,12 +46,40 @@ export function createContactItem(text, id, editPath, withItem = true) {
 // 데이터: 글자 배열 (예: ["sample@example.com", "010-0000-0000"]). 한 줄씩 나열된다.
 // 이메일과 웹 주소는 하이퍼링크가 된다. 그 밖의 글자는 그대로 나온다.
 // 내용이 없으면 만들지 않는다. 이름표는 <머리말>-body, 줄은 <머리말>-body-list-i<번호>, 링크는 줄 이름표 뒤에 -link이다.
-function createContactBody(contact, id) {
-  if (!Array.isArray(contact) || contact.length === 0) return null;
-  const listId = partId(id, "body-list");
-  const items = contact.map((text, index) => createContactItem(text, itemId(listId, index), itemPath("header.contact", index)));
-  const list = el("ul", { className: "contact-list", attrs: testAttr(listId) }, items);
-  return el("div", { className: "header-body", attrs: testAttr(partId(id, "body")) }, [list]);
+function createContactBody(contact, id, resumeLink) {
+  const list = Array.isArray(contact) && contact.length > 0
+    ? el("ul", { className: "contact-list", attrs: testAttr(partId(id, "body-list")) },
+        contact.map((text, index) => createContactItem(text, itemId(partId(id, "body-list"), index), itemPath("header.contact", index))))
+    : null;
+  const resume = createResumeLink(resumeLink, id);
+  if (!list && !resume) return null;
+  // 이력서 링크가 연락처 목록 위(맨 위)에 온다. (사용자 요청)
+  return el("div", { className: "header-body", attrs: testAttr(partId(id, "body")) }, [resume, list].filter(Boolean));
+}
+
+// 웹 이력서 링크(header.resumeLink). 사진 오른쪽 칸의 맨 위, 연락처 목록(이메일) 위에 한 줄로 나온다.
+// 데이터: { label: "웹 호스팅 중인 이력서 링크", url: "웹 주소" } 글자(label)가 링크이고 주소는 보이지 않는다.
+// PDF로만 제출하는 곳에서도 이 글자를 눌러 웹 이력서를 열 수 있게 하기 위해서이다. (사용자 요청)
+// 연락처와 다른 종류로 나누었고, 글자는 연락처보다 2pt 크다. (CSS resume-link)
+// 편집 모드에서는 글자 옆에 주소 칸이 나와 주소도 고친다. (프로젝트 링크 목록의 주소 칸과 같은 모양)
+// 이름표: <머리말>-resume-link, 주소 칸 <머리말>-resume-link-url
+function createResumeLink(link, id) {
+  const editing = document.documentElement?.hasAttribute("data-dev-edit");
+  const label = String(link?.label ?? "");
+  const url = String(link?.url ?? "");
+  const isWeb = /^https?:\/\//.test(url);
+  if (!link || (!editing && (!label || !isWeb))) return null;
+  const linkId = partId(id, "resume-link");
+  const anchor = el("a", {
+    text: label,
+    attrs: { ...(isWeb ? { href: url, target: "_blank" } : {}), ...testAttr(partId(linkId, "text")) },
+    edit: "header.resumeLink.label",
+    placeholder: "링크 글자",
+  });
+  const urlBox = editing
+    ? el("span", { text: url, className: "gallery-link-url", attrs: testAttr(partId(linkId, "url")), edit: "header.resumeLink.url", placeholder: "주소 (http로 시작)" })
+    : null;
+  return el("p", { className: "resume-link", attrs: testAttr(linkId) }, [anchor, urlBox].filter(Boolean));
 }
 
 // About me 영역. 사진과 연락처 줄 아래에 놓인다.
@@ -83,7 +111,7 @@ export function renderHeader(root, data, id) {
 
   const row = el("div", { className: "header-row", attrs: testAttr(partId(id, "row")) }, [
     createPhotoSlot(data.photo, id),
-    createContactBody(data.contact, id),
+    createContactBody(data.contact, id, data.resumeLink),
   ].filter(Boolean));
 
   root.append(el("h1", { text: data.name, attrs: testAttr(partId(id, "name")), edit: "header.name" }), row);

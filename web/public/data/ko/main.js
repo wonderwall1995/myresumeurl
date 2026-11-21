@@ -122,12 +122,14 @@
 // 머리말 (header). 위에서 아래로: 이름(name, 최상단 전체 폭), 그 아래 한 줄에 | 사진 | 연락처 |.
 // 이름 예: "홍웅기 | QA".
 // 연락처 Body: header.contact = ["sample@example.com", "010-0000-0000"]. 한 줄씩 나열된다. 비어 있으면 나타나지 않는다.
+// 웹 이력서 링크: header.resumeLink = { label: "웹 호스팅 중인 이력서 링크", url: "웹 주소" }. 사진 오른쪽 칸의 맨 위(연락처 위)에 한 줄로 나온다.
+//   글자가 하이퍼링크이고 주소는 보이지 않는다. 글자는 연락처보다 2pt 크다. PDF로 제출할 때도 눌러서 웹 이력서를 열 수 있다.
 // 프로필 사진: header.photo.src에 같은 도메인의 파일 경로를 쓴다 (예: "/images/profile.webp").
 //   사진이 없어도 사진 자리는 만들어진다.
 export const mainPage = {
   sidebar: { name: "" },
   toc: [],
-  header: { name: "", photo: { src: "", alt: "" }, contact: [], about: { heading: "", text: [] } },
+  header: { name: "", photo: { src: "", alt: "" }, contact: [], resumeLink: { label: "", url: "" }, about: { heading: "", text: [] } },
   sections: [
     { id: "s02-career", type: "career", heading: "", interests: { heading: "", groups: [] }, focus: { heading: "", text: [] }, worklistHeading: "", cards: [] },
     { id: "s01-intro", type: "intro", heading: "", text: "" },
