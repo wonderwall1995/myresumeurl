@@ -6,7 +6,7 @@ import { execSync } from "node:child_process";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build, distDir } from "./build.mjs";
-import { hashPdfInputs, PDF_FILES, PDF_MANIFEST } from "./pdf-hash.mjs";
+import { countPdfPages, hashPdfInputs, MIN_PDF_PAGES, PDF_FILES, PDF_MANIFEST } from "./pdf-hash.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // 점검 대상은 배포 폴더(dist)이다. 점검을 시작할 때 pnpm build와 같은 방식으로 새로 만든다.
@@ -230,7 +230,13 @@ check("저장용 PDF (dist/pdf)", () => {
   const problems = [];
   const dir = join(publicDir, "pdf");
   for (const name of Object.values(PDF_FILES)) {
-    if (!existsSync(join(dir, name))) problems.push(`${name}가 없음. pnpm pdf를 실행한다.`);
+    if (!existsSync(join(dir, name))) {
+      problems.push(`${name}가 없음. pnpm pdf를 실행한다.`);
+      continue;
+    }
+    // 이력서가 아닌 화면(브라우저 오류 화면 등)을 저장한 PDF는 1쪽이다. 쪽 수로 막는다.
+    const pages = countPdfPages(readFileSync(join(dir, name)));
+    if (pages < MIN_PDF_PAGES) problems.push(`${name}가 ${pages}쪽뿐임. 이력서가 아닌 화면을 저장했을 수 있다. pnpm pdf를 다시 실행한다.`);
   }
   const manifestPath = join(dir, PDF_MANIFEST);
   if (!existsSync(manifestPath)) {

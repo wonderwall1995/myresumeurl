@@ -77,6 +77,7 @@
 //
 // 프로젝트 (type: "projects"). 지금은 화면과 인쇄 모두 문서 모양이다. (갤러리 타일과 모달은 꺼 둠. 되돌리는 방법은 css/gallery-mobile.css 머리 주석)
 //   블록 방식(권장): 카드마다 blocks에 블록을 원하는 순서로 쌓는다. 블록은 세 종류이다.
+//   (text 블록은 경력 기술처럼 두 칸 행이다. { type: "text", rows: [{ head: "소제목", body: ["줄글 단락", ...] }] })
 //   { no: 1, title: "제목", summary: "요약", blocks: [
 //       { type: "image", src: "/images/a.webp", alt: "설명" },
 //       { type: "head", title: "제목", links: [{ label: "GitHub Repo", url: "https://..." }, { label: "배포 링크", url: "https://..." }] },

@@ -23,7 +23,7 @@ import { partId, testAttr } from "../lib/ids.js";
 import { cardPath, sectionPath } from "../lib/edit-path.js";
 import { eachCard } from "../common/card.js";
 import { createModal } from "../common/modal.js";
-import { createBody, createPageBreak, PAGE_BREAK, renderHeading } from "../common/section-parts.js";
+import { createBody, createPageBreak, createTextRows, PAGE_BREAK, renderHeading } from "../common/section-parts.js";
 
 // 사진 요소를 만든다. 사진이 없으면 null을 반환한다.
 // editItem은 사진 목록(images)의 한 항목일 때 그 경로이다. 편집 모드에서 사진을 누르면 그 사진이 선택된다.
@@ -201,7 +201,8 @@ function createNumber(order, id) {
 // 블록 하나. 블록은 세 종류이다.
 //   head   제목줄. { type: "head", title: "제목", links: [{ label, url }] } 제목 한 줄, 그 아래 링크 한 줄이다. 둘 다 가운데 정렬이다.
 //   image  사진. { type: "image", src: "/images/...", alt: "설명" }
-//   text   줄글. { type: "text", text: ["줄글", ...] } 줄글 하나가 문단 하나이다. # 제목과 **굵게**를 쓸 수 있다.
+//   text   줄글. { type: "text", rows: [{ head: "소제목", body: ["줄글", ...] }] } 경력 기술처럼 두 칸(소제목 | 줄글들) 행이다.
+//          (예전 모양 { type: "text", text: ["줄글", ...] }도 그린다. 줄글 하나가 문단 하나이다.)
 // 블록(div.gallery-block)이 편집 단위이다. 편집 모드에서 블록을 누르면 순서 바꾸기, 삭제, 다른 블록 추가를 할 수 있다.
 // 이름표: 블록 <카드>-b1, 제목 <카드>-b1-title, 링크 <카드>-b1-link-l1, 사진 <카드>-b2-image, 줄글 <카드>-b3-text-t1
 function createBlock(block, index, id, p) {
@@ -219,7 +220,10 @@ function createBlock(block, index, id, p) {
   } else if (block?.type === "image") {
     children = [createImage(block, partId(blockId, "image"), "gallery-page-image")];
   } else if (block?.type === "text") {
-    children = [createImageText(block.text, partId(blockId, "text"), `${path}.text`)];
+    // 행 방식(block.rows)이면 경력 기술처럼 두 칸(소제목 | 줄글들) 행으로 보여 준다. 없으면 예전의 줄글 목록(block.text)이다.
+    children = Array.isArray(block.rows) && block.rows.length > 0
+      ? [createTextRows(block.rows, partId(blockId, "rows"), `${path}.rows`, "gallery-text")]
+      : [createImageText(block.text, partId(blockId, "text"), `${path}.text`)];
   }
   children = children.filter(Boolean);
   if (children.length === 0) return null;

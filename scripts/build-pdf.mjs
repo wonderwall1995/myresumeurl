@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, distDir } from "./build.mjs";
-import { hashPdfInputs, PDF_FILES, PDF_MANIFEST } from "./pdf-hash.mjs";
+import { countPdfPages, hashPdfInputs, MIN_PDF_PAGES, PDF_FILES, PDF_MANIFEST } from "./pdf-hash.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "web", "preview", "pdf");
@@ -54,8 +54,27 @@ function findBrowser() {
   return candidates.find((path) => existsSync(path)) ?? null;
 }
 
+// Chrome과 Edge가 보안상 열지 않는 포트(Chromium의 제한 포트 목록). 이 포트로 연 페이지는 ERR_UNSAFE_PORT 오류 화면이 된다.
+// 임시 서버가 운영체제에서 받은 포트가 이 목록에 있으면 다시 받는다. (1719번을 받아 오류 화면이 PDF로 저장된 일이 있었다.)
+const UNSAFE_PORTS = new Set([
+  1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95, 101, 102, 103, 104, 109, 110, 111, 113, 115,
+  117, 119, 123, 135, 137, 139, 143, 161, 179, 389, 427, 465, 512, 513, 514, 515, 526, 530, 531, 532, 540, 548, 554, 556, 563, 587,
+  601, 636, 989, 990, 993, 995, 1719, 1720, 1723, 2049, 3659, 4045, 4190, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669,
+  6679, 6697, 10080,
+]);
+
 // dist를 읽기 전용으로 여는 임시 서버. 127.0.0.1에만 열고, dist 밖의 파일은 주지 않는다.
-function serveDist() {
+// 브라우저가 막는 포트를 받으면 닫고 다시 연다. (최대 20번)
+async function serveDist() {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const opened = await openServer();
+    if (!UNSAFE_PORTS.has(opened.port)) return opened;
+    opened.server.close();
+  }
+  throw new Error("브라우저가 허용하는 포트로 임시 서버를 열지 못함");
+}
+
+function openServer() {
   const base = resolve(distDir);
   const server = createServer((request, response) => {
     const url = new URL(request.url ?? "/", "http://127.0.0.1");
@@ -111,19 +130,25 @@ async function openBrowser() {
 }
 
 // 페이지를 열고 이력서가 다 그려질 때까지 기다린 뒤 PDF 데이터를 반환한다.
+// 준비가 끝나지 않거나 페이지를 열지 못하면 오류로 멈춘다. (오류 화면을 PDF로 저장하지 않기 위해서이다.)
+const READY_EXPRESSION = `Boolean(document.querySelector('[data-testid="s00-header"]')) && Boolean(document.querySelector('[data-testid="s02-career"]')) && document.fonts.status === "loaded"`;
+
 async function printPdf(browser, url, landscape) {
-  await browser.send("Page.navigate", { url });
-  for (let i = 0; i < 40; i += 1) {
-    const { result } = await browser.send("Runtime.evaluate", {
-      expression: `Boolean(document.querySelector('[data-testid="s02-career"]')) && document.fonts.status === "loaded"`,
-      returnByValue: true,
-    });
-    if (result.value) break;
-    await sleep(250);
+  const navigation = await browser.send("Page.navigate", { url });
+  if (navigation.errorText) throw new Error(`페이지를 열지 못함: ${url} (${navigation.errorText})`);
+  let ready = false;
+  for (let i = 0; i < 40 && !ready; i += 1) {
+    const { result } = await browser.send("Runtime.evaluate", { expression: READY_EXPRESSION, returnByValue: true });
+    ready = result.value === true;
+    if (!ready) await sleep(250);
   }
+  if (!ready) throw new Error(`이력서가 10초 안에 그려지지 않음: ${url}`);
   // 글꼴 조각(unicode-range)을 더 내려받을 시간을 준다.
   await sleep(1500);
   await browser.send("Runtime.evaluate", { expression: "document.fonts.ready", awaitPromise: true });
+  // 인쇄 직전에 이력서의 필수 요소가 그대로 있는지 다시 확인한다.
+  const recheck = await browser.send("Runtime.evaluate", { expression: READY_EXPRESSION, returnByValue: true });
+  if (recheck.result.value !== true) throw new Error(`인쇄 직전에 이력서 요소를 찾지 못함: ${url}`);
   const { data } = await browser.send("Page.printToPDF", {
     landscape,
     printBackground: true,
@@ -138,7 +163,7 @@ async function printPdf(browser, url, landscape) {
 function describe(buffer) {
   const text = buffer.toString("latin1");
   const media = text.match(/\/MediaBox\s*\[\s*0 0 ([\d.]+) ([\d.]+)\s*\]/);
-  return { pages: (text.match(/\/Type\s*\/Page[^s]/g) ?? []).length, width: Number(media?.[1]), height: Number(media?.[2]) };
+  return { pages: countPdfPages(buffer), width: Number(media?.[1]), height: Number(media?.[2]) };
 }
 
 // 저장소의 PDF가 현재 재료(hash)로 만든 것인지 확인한다.
@@ -158,6 +183,8 @@ async function generate(hash) {
       const info = describe(buffer);
       const isLandscape = info.width > info.height;
       if (isLandscape !== (direction === "landscape")) throw new Error(`${name}: 방향이 맞지 않음 (${info.width} x ${info.height})`);
+      // 이력서는 여러 쪽이다. 1쪽이면 오류 화면이나 빈 페이지를 저장한 것으로 본다. (MIN_PDF_PAGES, pdf-hash.mjs)
+      if (info.pages < MIN_PDF_PAGES) throw new Error(`${name}: ${info.pages}쪽뿐이라 이력서가 아닌 화면을 저장한 것으로 보임`);
       made.push({ name, buffer });
       console.log(`[PDF] ${name}: ${info.pages}쪽, ${Math.round(buffer.length / 1024)}KB, ${direction === "landscape" ? "가로" : "세로"}`);
     }

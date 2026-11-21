@@ -82,3 +82,56 @@ export function createBody(body, id, editPath) {
   if (typeof body === "string" && body) return el("p", { text: body, attrs: testAttr(id), edit: editPath, md: "block" });
   return null;
 }
+
+// ---------- 두 칸 행 (소제목 | 줄글들) ----------
+// 자기소개(rows)와 프로젝트 줄글 블록(rows)을 경력 기술처럼 두 칸 행으로 보여 준다. (사용자 요청)
+// 데이터: rows: [{ head: "소제목", body: ["줄글 단락", "줄글 단락"] }, ...]
+//   head는 왼쪽 칸의 소제목 한 줄이다. body는 오른쪽 칸의 줄글 단락 목록이다. 단락 안에서 # 제목, **굵게**, 줄바꿈(\n)을 쓸 수 있다.
+//   rows와 body에는 인쇄 쪽 나눔 표식("===")을 넣을 수 있다.
+// 편집 모드에서는 보이는 그대로 고친다. 소제목을 누르면 소제목을, 단락을 누르면 단락을 고친다.
+//   행(div.text-row)과 단락(p)이 각각 배열의 항목이라 ▲▼, +, 삭제, 끊기가 행 단위와 단락 단위로 동작한다.
+// 이름표: 행 목록 <id>, 행 <id>-r1, 소제목 <id>-r1-head, 줄글 칸 <id>-r1-body, 단락 <id>-r1-p1, 행 사이 쪽 나눔 <id>-break1
+// bodyClass는 단락의 클래스이다. (자기소개 intro-text, 프로젝트 gallery-text. 글자 크기와 폭이 여기에 따른다.)
+export function createTextRows(rows, id, base, bodyClass) {
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+  const editing = isEditMode();
+  // 행 번호(r1, r2)는 쪽 나눔 표식을 세지 않는다. 표식을 넣거나 빼도 행의 이름표가 바뀌지 않는다. (경력 직책 번호와 같은 방식)
+  let rowCount = 0;
+  let breakCount = 0;
+  const nodes = rows.map((row, index) => {
+    const path = itemPath(base, index);
+    if (row === PAGE_BREAK) {
+      breakCount += 1;
+      return createPageBreak(partId(id, `break${breakCount}`), path);
+    }
+    if (!row || typeof row !== "object") return null;
+    rowCount += 1;
+    const rowId = partId(id, `r${rowCount}`);
+    const list = Array.isArray(row.body) ? row.body : row.body ? [String(row.body)] : [];
+    const paragraphs = list.map((value, bodyIndex) => {
+      const text = String(value ?? "");
+      const bodyPath = Array.isArray(row.body) ? itemPath(`${path}.body`, bodyIndex) : `${path}.body`;
+      if (Array.isArray(row.body) && text === PAGE_BREAK) return createPageBreak(partId(rowId, `p${bodyIndex + 1}-break`), bodyPath);
+      if (!text && !editing) return null;
+      return el("p", {
+        text,
+        className: `text-row-para ${bodyClass}`,
+        attrs: testAttr(partId(rowId, `p${bodyIndex + 1}`)),
+        edit: bodyPath,
+        editItem: Array.isArray(row.body) ? bodyPath : undefined,
+        md: "block",
+        placeholder: text ? undefined : "줄글 (# 제목, **굵게** 가능)",
+      });
+    }).filter(Boolean);
+    const head = el("div", {
+      text: String(row.head ?? ""),
+      className: "text-row-head",
+      attrs: testAttr(partId(rowId, "head")),
+      edit: `${path}.head`,
+      placeholder: "소제목",
+    });
+    const body = el("div", { className: "text-row-body", attrs: testAttr(partId(rowId, "body")) }, paragraphs);
+    return el("div", { className: "text-row", attrs: testAttr(rowId), editItem: path }, [head, body]);
+  }).filter(Boolean);
+  return nodes.length > 0 ? el("div", { className: "text-rows", attrs: testAttr(id) }, nodes) : null;
+}
