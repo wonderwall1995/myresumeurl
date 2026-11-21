@@ -449,12 +449,3 @@ html:not(.dev-edit-on) .gallery-text[data-placeholder]:empty {
     font: 11px/1.4 ui-monospace, Consolas, monospace;
   }
 }
-
-/* 두 칸 줄글: 편집을 켜면 두 칸 모양을 숨기고 원본 글자 칸을 보여 준다. 저장하면 새로고침되어 두 칸 모양이 새 글자로 다시 그려진다. */
-.dev-edit-on .split-view {
-  display: none;
-}
-
-.dev-edit-on .split-raw {
-  display: block;
-}

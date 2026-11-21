@@ -38,3 +38,10 @@ export const PDF_FILES = {
 };
 // PDF를 만들 때의 재료 해시를 한 줄로 적은 파일. (배포 폴더에 허용된 형식이라 txt로 쓴다.)
 export const PDF_MANIFEST = "manifest.txt";
+// 저장용 PDF의 최소 쪽 수. 이력서는 여러 쪽이므로 이보다 적으면 오류 화면이나 빈 페이지를 저장한 것으로 본다.
+export const MIN_PDF_PAGES = 2;
+
+// PDF의 쪽 수를 센다. (쪽 객체 /Type /Page의 개수)
+export function countPdfPages(buffer) {
+  return (buffer.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+}

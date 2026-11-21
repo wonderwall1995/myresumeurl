@@ -43,6 +43,7 @@
     links: "링크",
     images: "사진",
     blocks: "블록",
+    rows: "행",
   };
   // 프로젝트 카드 링크 목록(links)의 최대 개수. 이보다 많으면 + 버튼이 멈춘다. (사용자 결정)
   const LINKS_MAX = 3;

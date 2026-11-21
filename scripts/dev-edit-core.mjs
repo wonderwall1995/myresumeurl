@@ -358,7 +358,8 @@ export const BLOCK_PATH = /^sections\[id=[A-Za-z0-9-]+\]\.cards\[no=\d+\]\.block
 // 새 블록의 처음 모양. 사진 블록은 사진을 올려서 만든다. (addImage)
 const BLOCK_TEMPLATES = {
   head: () => ({ type: "head", title: PLACEHOLDER, links: [{ label: "GitHub Repo", url: "" }] }),
-  text: () => ({ type: "text", text: [""] }),
+  // 줄글 블록은 두 칸 행(소제목 | 줄글들)으로 시작한다. 소제목과 줄글은 편집 모드에서 눌러서 쓴다.
+  text: () => ({ type: "text", rows: [{ head: "", body: [""] }] }),
 };
 
 // 블록 경로나 카드 경로에서 카드 경로, 블록 목록 노드, 넣을 위치(그 뒤)를 찾는다.
