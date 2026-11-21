@@ -62,10 +62,11 @@
      원래 값(3단위 + 본문 한 줄)의 72%이다. 인쇄는 print.css가 pt로 다시 정한다. */
   --role-row-gap: calc((var(--space-unit) * 3 + var(--line-height-body) * 1rem) * 0.72);
   /* 글자 속 제목(# ## ###)의 크기. 블록 모드의 여러 줄 글자에서만 쓰인다. (lib/markdown.js) */
-  /* 프로젝트 줄글(images, blocks의 text)의 글자 크기. 인쇄 크기(10pt = 13.33px)와 같게 둔다. (사용자 요청)
-     화면(PC)과 인쇄에 같은 값이 쓰인다. 모바일은 글자 크기 버튼을 따르도록 components.css의 모바일 구간에서 1rem으로 바꾼다.
+  /* 자기소개와 프로젝트 줄글(두 칸 행의 오른쪽 단락)의 글자 크기. 다른 본문과 같은 본문 기준 크기(1rem)이다.
+     화면에서는 16px, 인쇄에서는 print.css가 정한 10pt가 된다. 소제목(왼쪽 칸)은 따로 정한다.
+     (예전에는 10pt로 고정해서 화면에서만 다른 본문(16px)보다 작게 보였다. 사용자 요청으로 본문 기준에 맞췄다.)
      줄글 안의 # 제목은 이 크기의 배수(em)이다. */
-  --gallery-text-size: 11pt;
+  --gallery-text-size: 1rem;
   --md-h1-size: 1.5rem;
   --md-h2-size: 1.25rem;
   --md-h3-size: 1.0625rem;
