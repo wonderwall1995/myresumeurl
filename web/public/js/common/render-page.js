@@ -62,6 +62,59 @@ export function renderPage(app, page) {
   const toc = createToc(page.toc, existingIds, { name: page.sidebar?.name, contact: page.header?.contact });
   if (toc) app.prepend(toc);
   markPrintPageStarts(app, page.toc);
+  markPrintPageNames(app, page.toc);
+}
+
+// 인쇄한 쪽마다 오른쪽 위 여백에 그 쪽이 속한 목차 이름(예: "자기소개")을 찍는다. (사용자 요청)
+// 쪽 여백 상자(@page의 @top-right)에 찍으므로 본문은 움직이지 않는다. 화면에는 나오지 않는다. 쪽 번호는 붙이지 않는다.
+// 방법: 목차 구간마다 이름 붙인 쪽(page: toc-1, toc-2 ...)을 정하고, 구간에 속한 요소에 그 쪽 이름을 준다.
+//   구간은 목차 항목의 대상 요소부터 다음 항목의 대상 요소 전까지이다. (print-page-start와 같은 기준)
+//   대상 요소가 섹션 안에 있으면(예: 경력 섹션 안의 이력 제목) 그 섹션은 자식 요소 단위로 나눠서 정한다.
+// 쪽 규칙은 CSSOM(CSSStyleSheet, adoptedStyleSheets)으로 넣는다. <style> 요소와 style 속성을 쓰지 않는다. (CSP 규칙)
+// 이 기능을 지원하지 않는 환경(빌드의 미리 그리기, 오래된 브라우저)에서는 아무것도 하지 않는다. 그때는 이름이 찍히지 않을 뿐이다.
+function markPrintPageNames(app, tocItems) {
+  if (typeof CSSStyleSheet === "undefined" || !("adoptedStyleSheets" in document)) return;
+  const byId = new Map([...app.querySelectorAll("[id]")].map((node) => [node.id, node]));
+  const segments = (tocItems ?? [])
+    .map((item) => ({ label: item?.label, target: byId.get(item?.target) }))
+    .filter((segment) => segment.label && segment.target)
+    .sort((a, b) => (a.target.compareDocumentPosition(b.target) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  if (segments.length === 0) return;
+  const targets = segments.map((segment) => segment.target);
+
+  // 쪽 이름을 줄 단위: 머리말, 섹션, 바닥글. 목차 대상이 안에 든 섹션은 자식 요소로 나눈다.
+  const units = [];
+  for (const part of app.children) {
+    const blocks = part.classList.contains("site-main") ? [...part.children] : [part];
+    for (const block of blocks) {
+      const holdsTarget = targets.some((target) => target !== block && block.contains(target));
+      units.push(...(holdsTarget ? [...block.children] : [block]));
+    }
+  }
+  // 요소가 속한 구간: 그 요소이거나 그 요소보다 앞에 있는 대상 중 마지막 것.
+  const segmentOf = (unit) => {
+    let index = -1;
+    targets.forEach((target, i) => {
+      if (target === unit || target.contains(unit) || target.compareDocumentPosition(unit) & Node.DOCUMENT_POSITION_FOLLOWING) index = i;
+    });
+    return index;
+  };
+  for (const unit of units) {
+    if (unit.classList.contains("toc")) continue;
+    const index = segmentOf(unit);
+    if (index >= 0) unit.style.page = `toc-${index + 1}`;
+  }
+
+  const sheet = new CSSStyleSheet();
+  segments.forEach((segment, index) => {
+    const label = JSON.stringify(String(segment.label));
+    try {
+      sheet.insertRule(`@page toc-${index + 1} { @top-right { content: ${label}; font-family: "Pretendard Variable", Pretendard, sans-serif; font-size: 8pt; font-weight: 700; color: #000; vertical-align: bottom; padding-bottom: 3mm; } }`, sheet.cssRules.length);
+    } catch {
+      // 쪽 여백 상자를 모르는 브라우저. 이름만 빠지고 인쇄는 그대로이다.
+    }
+  });
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
 }
 
 // 목차 항목의 대상 요소마다 인쇄에서 새 쪽을 시작하도록 표시한다. (print.css의 .print-page-start)

@@ -6,7 +6,7 @@
 //   blocks: 제목줄(head), 사진(image), 줄글(text) 블록을 원하는 순서로 쌓는다. (createBlock) 있으면 이 방식을 쓴다.
 //   예전 방식(blocks가 없을 때): links(또는 link, linkText, demo), images(또는 image), body.
 // 링크는 두 방식이 있다.
-//   links 배열: [{ label: "Frontend Repo", url: "저장소 주소" }, ...] 링크마다 이름을 붙인다. 최대 3개를 권한다. 있으면 이 방식을 쓴다.
+//   links 배열: [{ label: "Frontend Repo", url: "저장소 주소" }, ...] 링크마다 이름을 붙인다. 최대 4개를 권한다. 있으면 이 방식을 쓴다.
 //   예전 방식: 저장소(link, linkText)는 글자가 항상 "GitHub Repo"이고, 배포(demo)는 글자가 항상 "배포 링크"이다. 둘 다 새 탭으로 열린다.
 // linkText에 주소를 쓰면 그 주소로 연결한다. demo는 배포된 프로젝트에만 쓴다. 없으면 나타나지 않는다.
 // 인쇄할 때는 프로젝트마다 맨 위에 섹션 제목("프로젝트"와 선)이 다시 나온다.
@@ -142,7 +142,7 @@ function createLinkItem(link, index, id, p, prefix) {
 }
 
 // 링크 목록을 한 줄로 묶어 만든다. 링크 사이는 가는 세로선으로 나눈다. (CSS .gallery-links > * + *)
-// 최대 3개를 권한다. 편집 모드의 + 버튼은 3개에서 멈춘다. (scripts/dev-edit.js)
+// 최대 4개를 권한다. 편집 모드의 + 버튼은 4개에서 멈춘다. (scripts/dev-edit.js)
 function createLinkList(card, id, p, prefix) {
   const items = card.links.map((link, index) => createLinkItem(link, index, id, p, prefix)).filter(Boolean);
   if (items.length === 0) return null;
