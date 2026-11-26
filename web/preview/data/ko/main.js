@@ -451,12 +451,12 @@ export const mainPage = {
           blocks: [
             {
               type: "image",
-              src: "/images/project-1-1795137220795.webp",
+              src: "/images/project-1-hd-1.png",
               alt: "결함 건수 추이를 나타낸 샘플 막대 그림",
             },
             {
               type: "image",
-              src: "/images/project-1-1795137927807.webp",
+              src: "/images/project-1-hd-2.png",
               alt: "Web 자동화 테스트 예제 사진 2",
             },
             {
@@ -533,7 +533,7 @@ export const mainPage = {
           blocks: [
             {
               type: "image",
-              src: "/images/project-2-1795137312995.webp",
+              src: "/images/project-2-hd-1.png",
               alt: "자동화 파이프라인을 나타낸 샘플 흐름 그림",
             },
             {
@@ -578,12 +578,12 @@ export const mainPage = {
           blocks: [
             {
               type: "image",
-              src: "/images/project-3-1795137291235.webp",
+              src: "/images/project-3-hd-1.png",
               alt: "품질 추이를 나타낸 샘플 선 그림",
             },
             {
               type: "image",
-              src: "/images/project-3-1795140488444.webp",
+              src: "/images/project-3-hd-2.png",
               alt: "헤르메스 - 테스트 게이트 사진 2",
             },
             {
@@ -656,12 +656,12 @@ export const mainPage = {
           blocks: [
             {
               type: "image",
-              src: "/images/project-4-1795137278599.webp",
+              src: "/images/project-4-hd-1.png",
               alt: "샘플 막대 그림",
             },
             {
               type: "image",
-              src: "/images/project-4-1795140495167.webp",
+              src: "/images/project-4-hd-2.png",
               alt: "DB Key tagger - DB 기반 LLM 맥락 문서 작성 사진 2",
             },
             {
