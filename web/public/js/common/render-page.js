@@ -32,6 +32,37 @@ function renderSections(main, sections) {
   }
 }
 
+// 섹션을 다른 섹션 안의 한 요소 바로 앞으로 옮긴다. (섹션 데이터의 placeBefore: 요소 id)
+// 예: 학력(s07-education)을 경력 섹션 안의 이력 제목(s02-career-worklist-heading) 앞에 놓는다. (사용자 요청)
+// 방법: 대상 요소가 든 섹션을 대상 요소 앞에서 둘로 나눈다. 대상 요소와 그 뒤의 요소는 새 섹션(이어지는 부분)으로 옮긴다.
+// 그 다음 두 섹션 사이에 옮길 섹션을 놓는다. 그래서 모든 섹션은 계속 본문(main)의 바로 아래에 있고, 섹션 CSS가 그대로 적용된다.
+// 편집 경로(data-edit)는 데이터 위치를 가리키므로 바뀌지 않는다.
+// 대상이 없거나 섹션의 바로 아래 요소가 아니면 옮기지 않는다. 섹션은 데이터 순서의 자리에 그대로 남는다.
+function placeSections(main, sections) {
+  for (const data of sections) {
+    if (!data?.placeBefore || !data.id) continue;
+    const moving = [...main.children].find((node) => node.id === data.id);
+    const target = [...main.querySelectorAll("[id]")].find((node) => node.id === data.placeBefore);
+    const host = target?.parentElement;
+    if (!moving || !host || host === moving || host.tagName !== "SECTION" || host.parentElement !== main) {
+      console.error(`섹션을 옮길 대상이 없음: ${data.id} -> ${data.placeBefore}`);
+      continue;
+    }
+    // 이어지는 부분에는 id를 붙이지 않는다. 목차와 편집은 안의 요소 id와 경로를 쓴다.
+    const rest = el("section", { className: "section-continued", attrs: testAttr(`${host.id}-continued`) });
+    let node = target;
+    while (node) {
+      const next = node.nextSibling;
+      rest.append(node);
+      node = next;
+    }
+    // 인쇄에서는 옮긴 섹션이 대상 요소의 쪽 맨 앞에 붙는다. (printStartOf)
+    moving.classList.add("section-placed");
+    main.insertBefore(moving, host.nextSibling);
+    main.insertBefore(rest, moving.nextSibling);
+  }
+}
+
 export function renderPage(app, page) {
   if (!app) return;
   // 빌드가 미리 채운 내용을 지우고 다시 그린다. 그래야 버튼 동작(모달 열기)이 붙는다.
@@ -45,6 +76,7 @@ export function renderPage(app, page) {
 
   const main = el("main", { className: "site-main", attrs: testAttr("page-content") });
   renderSections(main, page.sections ?? []);
+  placeSections(main, page.sections ?? []);
 
   const footer = el("footer", {
     className: "site-footer",
@@ -65,6 +97,18 @@ export function renderPage(app, page) {
   markPrintPageNames(app, page.toc);
 }
 
+// 목차 대상이 인쇄에서 쪽을 시작하는 요소. 보통은 대상 자체이다.
+// 대상 바로 앞에 옮겨 놓은 섹션(placeSections, section-placed)이 있으면 그 섹션이다.
+// 예: 학력은 이력 제목 바로 앞에 있으므로, 인쇄에서는 학력부터 새 쪽이 시작되고 이력이 같은 쪽에 이어진다. (사용자 요청)
+// 이유: 대상 앞의 쪽 나눔(print-page-start)과, 쪽 이름이 바뀌는 곳(toc-1 -> toc-2)에서 브라우저가 쪽을 나눈다.
+// 두 곳을 모두 옮긴 섹션 앞으로 옮겨야 두 내용이 붙는다. 그 쪽의 오른쪽 위 목차 이름은 대상의 이름(예: "이력")이다.
+// 화면의 목차(현재 위치 표시와 이동)는 이 함수를 쓰지 않는다.
+function printStartOf(target) {
+  const section = target.parentElement;
+  const before = section?.classList.contains("section-continued") && section.firstElementChild === target ? section.previousElementSibling : null;
+  return before?.classList.contains("section-placed") ? before : target;
+}
+
 // 인쇄한 쪽마다 오른쪽 위 여백에 그 쪽이 속한 목차 이름(예: "자기소개")을 찍는다. (사용자 요청)
 // 쪽 여백 상자(@page의 @top-right)에 찍으므로 본문은 움직이지 않는다. 화면에는 나오지 않는다. 쪽 번호는 붙이지 않는다.
 // 방법: 목차 구간마다 이름 붙인 쪽(page: toc-1, toc-2 ...)을 정하고, 구간에 속한 요소에 그 쪽 이름을 준다.
@@ -78,6 +122,7 @@ function markPrintPageNames(app, tocItems) {
   const segments = (tocItems ?? [])
     .map((item) => ({ label: item?.label, target: byId.get(item?.target) }))
     .filter((segment) => segment.label && segment.target)
+    .map((segment) => ({ ...segment, target: printStartOf(segment.target) }))
     .sort((a, b) => (a.target.compareDocumentPosition(b.target) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   if (segments.length === 0) return;
   const targets = segments.map((segment) => segment.target);
@@ -123,6 +168,7 @@ function markPrintPageNames(app, tocItems) {
 function markPrintPageStarts(app, tocItems) {
   const byId = new Map([...app.querySelectorAll("[id]")].map((node) => [node.id, node]));
   for (const item of tocItems ?? []) {
-    byId.get(item?.target)?.classList.add("print-page-start");
+    const target = byId.get(item?.target);
+    if (target) printStartOf(target).classList.add("print-page-start");
   }
 }

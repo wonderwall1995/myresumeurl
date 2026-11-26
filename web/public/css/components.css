@@ -286,6 +286,12 @@
   margin-block-start: var(--section-gap);
 }
 
+/* 섹션의 맨 앞에 온 Worklist 제목. 학력이 경력 섹션의 Skills와 이력 사이에 놓일 때이다. (render-page.js placeSections)
+   섹션 사이 간격이 이미 있으므로 제목 위의 간격은 없앤다. */
+.career-worklist-heading:first-child {
+  margin-block-start: 0;
+}
+
 /* 관심 분야 글: 단락(focus-text)과 글머리 목록(focus-list). 줄바꿈 글자(\n)를 실제 줄바꿈으로 보여 준다. */
 .focus-text {
   text-align: left;
