@@ -83,7 +83,8 @@
    인쇄는 프로젝트마다 새 쪽이라 이 선이 없다. (print.css) */
 @media screen {
   .gallery-item + .gallery-item {
-    margin-block-start: calc(var(--space-unit) * 3);
+    /* 선 위 간격(앞 프로젝트의 끝에서 선까지)은 섹션 사이 간격과 같다. (사용자 요청 2026-11-26. 줄글이 문제 프레임만 남아 좁아 보였다. 이전 값: calc(var(--space-unit) * 3)) */
+    margin-block-start: var(--section-gap);
     padding-block-start: calc(var(--space-unit) * 3);
     border-block-start: 2px solid var(--color-text);
   }
