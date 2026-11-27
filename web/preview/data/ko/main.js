@@ -677,7 +677,7 @@ export const mainPage = {
                   url: "https://github.com/wonderwall1995/dbviewer-tagger",
                 },
                 {
-                  label: "배포 주소 (시연 코드가 필요합니다.)",
+                  label: "배포 주소",
                   url: "https://dbtagger.hwk-resume.web.chickenkiller.com/",
                 },
               ],
